@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Sparkle } from 'lucide-react'
 
 const Hero = () => {
   return (
@@ -7,7 +7,11 @@ const Hero = () => {
       
       <div className='container px-4 md:px-6 relative z-10'>
         <div className='grid gap-6 lg:grid-cols-2 lg:gap-12 xl:grid-cols-2 items-center'>
-          <div className='flex flex-col justify-center space-y-8 text-left'>                        
+          <div className='flex flex-col justify-center space-y-8 text-left'>  
+            <div className='inline-flex w-fit items-center rounded-full border border-border/50 bg-muted/30 px-3 py-1 text-sm font-medium text-muted-foreground backdrop-blur-sm'>
+              <Sparkle className="mr-2 h-3 w-3 text-primary" />
+              <span>Simplify your rental business</span>
+            </div>                      
             <div className='space-y-4'>
               <h1 className='text-4xl font-extrabold tracking-tight sm:text-5xl xl:text-7xl/none max-w-[800px]'>
                 Maximize Your <br />

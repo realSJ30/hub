@@ -25,6 +25,12 @@ const Navbar = () => {
             >
               Benefits
             </Link>
+            <Link
+              href="#"
+              className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Pricing
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-4">
