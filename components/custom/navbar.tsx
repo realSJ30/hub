@@ -34,11 +34,11 @@ const Navbar = () => {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-            <Button variant="ghost" className="hidden md:inline-flex">
-              Sign In
+            <Button asChild variant="ghost" className="hidden md:inline-flex">
+              <Link href="/login">Sign In</Link>
             </Button>
-            <Button>
-              Sign Up
+            <Button asChild>
+              <Link href="/signup">Sign Up</Link>
             </Button>
         </div>
       </div>
