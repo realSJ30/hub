@@ -8,6 +8,7 @@ import GoogleIcon from "@/components/icons/google.icon";
 import GithubIcon from "@/components/icons/github.icon";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
+import Image from "next/image";
 
 const SignUpForm = () => {
   return (
@@ -79,7 +80,21 @@ const SignUpForm = () => {
           </p>
         </div>
       </div>
-      <div className="hidden md:flex flex-col gap-4 flex-1 bg-primary rounded-2xl"></div>
+      <div className="hidden md:flex flex-col px-12 py-8 justify-start flex-1 bg-primary rounded-2xl text-white p-6 relative">
+        <h2 className="text-2xl font-semibold mt-34">
+          The simplest way to manage <br /> your rental properties
+        </h2>
+        <p className="text-neutral mt-4 text-sm">
+          RentHub is a platform that helps you manage your rental properties.
+        </p>
+        <Image
+          src="/signin-hero.svg"
+          alt="Sign Up"
+          width={500}
+          height={500}
+          className="absolute bottom-32 right-10 opacity-90"
+        />
+      </div>
     </div>
   );
 };
