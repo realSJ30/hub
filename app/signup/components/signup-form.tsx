@@ -1,10 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Car } from "lucide-react";
 import Link from "next/link";
 import GoogleIcon from "@/components/icons/google.icon";
 import GithubIcon from "@/components/icons/github.icon";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const SignUpForm = () => {
   return (
@@ -46,11 +49,25 @@ const SignUpForm = () => {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="••••••••" />
+            <PasswordInput id="password" placeholder="••••••••" />
           </div>
-          <Button className="w-full h-10 rounded-md font-semibold bg-violet-600">
+          <FieldGroup className="w-56 mt-4">
+            <Field orientation="horizontal">
+              <Checkbox id="terms-checkbox-basic" name="terms-checkbox-basic" />
+              <FieldLabel htmlFor="terms-checkbox-basic">
+                Accept terms and conditions
+              </FieldLabel>
+            </Field>
+          </FieldGroup>
+          <Button className="w-full h-10 rounded-md font-semibold bg-violet-600 mt-4">
             Sign Up
           </Button>
+          <p className="text-center mt-4">
+            Already have an account?{" "}
+            <Link href="/login" className="text-violet-600">
+              Sign In
+            </Link>
+          </p>
         </div>
       </div>
       <div className="flex flex-col gap-4 flex-1 bg-violet-600 rounded-2xl"></div>
