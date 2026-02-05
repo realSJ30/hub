@@ -6,7 +6,6 @@ import { loginSchema, type LoginValues } from "@/lib/schemas/auth.schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Car } from "lucide-react";
 import Link from "next/link";
 import GoogleIcon from "@/components/icons/google.icon";
 import GithubIcon from "@/components/icons/github.icon";
@@ -19,8 +18,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import { login } from "@/app/auth/actions";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "../../../components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircleIcon, Car } from "lucide-react";
 
 const LoginForm = () => {
   const [error, setError] = React.useState<string | null>(null);
@@ -82,9 +81,9 @@ const LoginForm = () => {
           </div>
 
           {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+            <Alert variant="destructive" className="max-w-md">
+              <AlertCircleIcon className="h-4 w-4" />
+              <AlertTitle>{error}</AlertTitle>
             </Alert>
           )}
 

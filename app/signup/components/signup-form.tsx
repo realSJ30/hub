@@ -19,8 +19,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import { signup } from "@/app/auth/actions";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
-import { Alert, AlertDescription } from "../../../components/ui/alert";
+import { AlertCircleIcon, CheckCircle2Icon } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useSearchParams } from "next/navigation";
 
 const SignUpForm = () => {
@@ -88,15 +88,15 @@ const SignUpForm = () => {
 
           {error && (
             <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertCircleIcon className="h-4 w-4" />
+              <AlertTitle>{error}</AlertTitle>
             </Alert>
           )}
 
           {message && (
             <Alert className="border-green-500/50 text-green-600 dark:border-green-500 [&>svg]:text-green-600">
-              <CheckCircle2 className="h-4 w-4" />
-              <AlertDescription>{message}</AlertDescription>
+              <CheckCircle2Icon className="h-4 w-4" />
+              <AlertTitle>{message}</AlertTitle>
             </Alert>
           )}
 
