@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
-import { login } from "@/app/auth/actions";
+import { login } from "@/app/actions/auth.actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircleIcon, Car } from "lucide-react";
 
