@@ -18,8 +18,13 @@ import {
 } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
+import { login } from "@/app/auth/actions";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "../../../components/ui/alert";
 
 const LoginForm = () => {
+  const [error, setError] = React.useState<string | null>(null);
+
   const form = useForm({
     defaultValues: {
       email: "",
@@ -30,8 +35,11 @@ const LoginForm = () => {
       onChange: loginSchema,
     },
     onSubmit: async ({ value }) => {
-      console.log("Submitted values:", value);
-      alert("Login successful!");
+      setError(null);
+      const result = await login(value);
+      if (result?.error) {
+        setError(result.error);
+      }
     },
   });
 
@@ -73,6 +81,13 @@ const LoginForm = () => {
             <hr className="w-full" />
           </div>
 
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           <form
             id="login-form"
             onSubmit={(e) => {
@@ -82,9 +97,8 @@ const LoginForm = () => {
             }}
           >
             <FieldGroup>
-              <form.Field
-                name="email"
-                children={(field) => {
+              <form.Field name="email">
+                {(field) => {
                   const isInvalid =
                     field.state.meta.isTouched &&
                     field.state.meta.errors.length > 0;
@@ -107,11 +121,10 @@ const LoginForm = () => {
                     </Field>
                   );
                 }}
-              />
+              </form.Field>
 
-              <form.Field
-                name="password"
-                children={(field) => {
+              <form.Field name="password">
+                {(field) => {
                   const isInvalid =
                     field.state.meta.isTouched &&
                     field.state.meta.errors.length > 0;
@@ -141,11 +154,10 @@ const LoginForm = () => {
                     </Field>
                   );
                 }}
-              />
+              </form.Field>
 
-              <form.Field
-                name="rememberMe"
-                children={(field) => {
+              <form.Field name="rememberMe">
+                {(field) => {
                   const isInvalid =
                     field.state.meta.isTouched &&
                     field.state.meta.errors.length > 0;
@@ -174,12 +186,13 @@ const LoginForm = () => {
                     </Field>
                   );
                 }}
-              />
+              </form.Field>
             </FieldGroup>
 
             <form.Subscribe
               selector={(state) => [state.canSubmit, state.isSubmitting]}
-              children={([canSubmit, isSubmitting]) => (
+            >
+              {([canSubmit, isSubmitting]) => (
                 <Button
                   className="w-full h-10 rounded-md font-semibold bg-primary mt-6"
                   type="submit"
@@ -188,11 +201,11 @@ const LoginForm = () => {
                   {isSubmitting ? "Signing In..." : "Sign In"}
                 </Button>
               )}
-            />
+            </form.Subscribe>
           </form>
 
           <p className="text-center mt-4 text-sm">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
               href="/signup"
               className="text-primary font-medium hover:underline"

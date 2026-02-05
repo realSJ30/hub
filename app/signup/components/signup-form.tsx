@@ -18,8 +18,16 @@ import {
 } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
+import { signup } from "@/app/auth/actions";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { Alert, AlertDescription } from "../../../components/ui/alert";
+import { useSearchParams } from "next/navigation";
 
 const SignUpForm = () => {
+  const [error, setError] = React.useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const message = searchParams.get("message");
+
   const form = useForm({
     defaultValues: {
       name: "",
@@ -32,8 +40,11 @@ const SignUpForm = () => {
       onChange: signupSchema,
     },
     onSubmit: async ({ value }) => {
-      console.log("Submitted values:", value);
-      alert("Registration successful!");
+      setError(null);
+      const result = await signup(value);
+      if (result?.error) {
+        setError(result.error);
+      }
     },
   });
 
@@ -75,6 +86,20 @@ const SignUpForm = () => {
             <hr className="w-full" />
           </div>
 
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {message && (
+            <Alert className="border-green-500/50 text-green-600 dark:border-green-500 [&>svg]:text-green-600">
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          )}
+
           <form
             id="signup-form"
             onSubmit={(e) => {
@@ -84,9 +109,8 @@ const SignUpForm = () => {
             }}
           >
             <FieldGroup>
-              <form.Field
-                name="name"
-                children={(field) => {
+              <form.Field name="name">
+                {(field) => {
                   const isInvalid =
                     field.state.meta.isTouched &&
                     field.state.meta.errors.length > 0;
@@ -108,11 +132,10 @@ const SignUpForm = () => {
                     </Field>
                   );
                 }}
-              />
+              </form.Field>
 
-              <form.Field
-                name="email"
-                children={(field) => {
+              <form.Field name="email">
+                {(field) => {
                   const isInvalid =
                     field.state.meta.isTouched &&
                     field.state.meta.errors.length > 0;
@@ -135,11 +158,10 @@ const SignUpForm = () => {
                     </Field>
                   );
                 }}
-              />
+              </form.Field>
 
-              <form.Field
-                name="password"
-                children={(field) => {
+              <form.Field name="password">
+                {(field) => {
                   const isInvalid =
                     field.state.meta.isTouched &&
                     field.state.meta.errors.length > 0;
@@ -161,11 +183,10 @@ const SignUpForm = () => {
                     </Field>
                   );
                 }}
-              />
+              </form.Field>
 
-              <form.Field
-                name="confirmPassword"
-                children={(field) => {
+              <form.Field name="confirmPassword">
+                {(field) => {
                   const isInvalid =
                     field.state.meta.isTouched &&
                     field.state.meta.errors.length > 0;
@@ -189,11 +210,10 @@ const SignUpForm = () => {
                     </Field>
                   );
                 }}
-              />
+              </form.Field>
 
-              <form.Field
-                name="terms"
-                children={(field) => {
+              <form.Field name="terms">
+                {(field) => {
                   const isInvalid =
                     field.state.meta.isTouched &&
                     field.state.meta.errors.length > 0;
@@ -222,12 +242,13 @@ const SignUpForm = () => {
                     </Field>
                   );
                 }}
-              />
+              </form.Field>
             </FieldGroup>
 
             <form.Subscribe
               selector={(state) => [state.canSubmit, state.isSubmitting]}
-              children={([canSubmit, isSubmitting]) => (
+            >
+              {([canSubmit, isSubmitting]) => (
                 <Button
                   className="w-full h-10 rounded-md font-semibold bg-primary mt-6"
                   type="submit"
@@ -236,7 +257,7 @@ const SignUpForm = () => {
                   {isSubmitting ? "Signing Up..." : "Sign Up"}
                 </Button>
               )}
-            />
+            </form.Subscribe>
           </form>
 
           <p className="text-center mt-4 text-sm">
