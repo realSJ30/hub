@@ -36,7 +36,7 @@ export async function signup(formData: SignupValues) {
     return { error: "Invalid form data" };
   }
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: formData.email,
     password: formData.password,
     options: {
@@ -48,6 +48,11 @@ export async function signup(formData: SignupValues) {
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Check if user already exists (identities will be empty if email is taken and enumeration protection is on)
+  if (data?.user && data.user.identities && data.user.identities.length === 0) {
+    return { error: "A user with this email already exists." };
   }
 
   revalidatePath("/", "layout");
