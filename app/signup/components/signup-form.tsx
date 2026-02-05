@@ -20,7 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import { signup } from "@/app/actions/auth.actions";
 import { AlertCircleIcon, CheckCircle2Icon } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { useSearchParams } from "next/navigation";
 
 const SignUpForm = () => {

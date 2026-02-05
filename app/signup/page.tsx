@@ -1,13 +1,12 @@
 import { Suspense } from "react";
 import SignUpForm from "./components/signup-form";
+import { SignUpSkeleton } from "./components/signup-skeleton";
 
 const SignUpPage = () => {
   return (
-    <div className="flex gap-4">
-      <Suspense fallback={<div>Loading...</div>}>
-        <SignUpForm />
-      </Suspense>
-    </div>
+    <Suspense fallback={<SignUpSkeleton />}>
+      <SignUpForm />
+    </Suspense>
   );
 };
 
