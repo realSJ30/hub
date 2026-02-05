@@ -1,7 +1,11 @@
+import LoginForm from "./components/login-form";
+
 const LoginPage = () => {
   return (
-    <div>LoginPage</div>
-  )
-}
+    <div className="flex gap-4">
+      <LoginForm />
+    </div>
+  );
+};
 
-export default LoginPage
+export default LoginPage;
