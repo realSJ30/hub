@@ -25,6 +25,7 @@ const SignUpForm = () => {
       name: "",
       email: "",
       password: "",
+      confirmPassword: "",
       terms: false,
     } as SignupValues,
     validators: {
@@ -145,6 +146,34 @@ const SignUpForm = () => {
                   return (
                     <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                      <PasswordInput
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="••••••••"
+                        aria-invalid={isInvalid}
+                      />
+                      {isInvalid && (
+                        <FieldError errors={field.state.meta.errors} />
+                      )}
+                    </Field>
+                  );
+                }}
+              />
+
+              <form.Field
+                name="confirmPassword"
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched &&
+                    field.state.meta.errors.length > 0;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>
+                        Confirm Password
+                      </FieldLabel>
                       <PasswordInput
                         id={field.name}
                         name={field.name}
