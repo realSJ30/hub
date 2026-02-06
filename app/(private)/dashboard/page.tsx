@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { LayoutDashboard } from "lucide-react";
+import DashboardCard from "./components/dashboard-card";
 
 const DashboardPage = async () => {
   const supabase = await createClient();
@@ -22,31 +23,30 @@ const DashboardPage = async () => {
         </div>
       </header>
 
-      {/* Placeholder Stats */}
+      {/* Dashboard Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { label: "Total Units", value: "12", trend: "+2 this month" },
-          { label: "Active Bookings", value: "8", trend: "100% fully booked" },
-          { label: "Pending Payments", value: "$1,250", trend: "3 overdue" },
-        ].map((stat, i) => (
-          <div
-            key={i}
-            className="bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm hover:shadow-md transition-all duration-300"
-          >
-            <p className="text-sm text-neutral-500 font-medium mb-1">
-              {stat.label}
-            </p>
-            <h3 className="text-2xl font-bold text-neutral-900">
-              {stat.value}
-            </h3>
-            <p className="text-xs text-primary font-medium mt-2 bg-primary/5 inline-block px-2 py-0.5 rounded-full">
-              {stat.trend}
-            </p>
-          </div>
-        ))}
+        <DashboardCard
+          label="Income"
+          value="$5,250"
+          trend="+12% from last month"
+          className="bg-primary border-primary"
+          href="/payments"
+        />
+        <DashboardCard
+          label="Expense"
+          value="$1,250"
+          trend="-5% from last month"
+          href="/payments"
+        />
+        <DashboardCard
+          label="Active Bookings"
+          value="8"
+          trend="100% fully booked"
+          href="/bookings"
+        />
       </div>
 
-      <article className="mt-8 bg-white rounded-2xl border border-neutral-200 shadow-sm p-8 flex flex-col items-center justify-center min-h-[400px] text-center">
+      <article className="mt-8 bg-white rounded-md border border-neutral-200 shadow-sm p-8 flex flex-col items-center justify-center min-h-[400px] text-center">
         <div className="bg-primary/5 p-4 rounded-full mb-4 animate-pulse">
           <LayoutDashboard size={48} className="text-primary opacity-20" />
         </div>
