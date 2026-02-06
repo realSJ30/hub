@@ -21,6 +21,8 @@ import { login } from "@/app/actions/auth.actions";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { AlertCircleIcon, Car } from "lucide-react";
 
+import LoginCarousel from "./login-carousel";
+
 const LoginForm = () => {
   const [error, setError] = React.useState<string | null>(null);
 
@@ -111,7 +113,7 @@ const LoginForm = () => {
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="johndoe@gmail.com"
+                        placeholder="your@email.com"
                         aria-invalid={isInvalid}
                       />
                       {isInvalid && (
@@ -214,22 +216,7 @@ const LoginForm = () => {
           </p>
         </div>
       </div>
-      <div className="hidden md:flex flex-col px-12 py-8 justify-start flex-1 bg-primary rounded-2xl text-white p-6 relative">
-        <h2 className="text-2xl font-semibold mt-34 leading-tight">
-          The simplest way to manage <br /> your rental properties
-        </h2>
-        <p className="text-neutral-200 mt-4 text-sm">
-          RentHub is a platform that helps you manage your rental properties.
-        </p>
-        <Image
-          src="/signin-hero.svg"
-          alt="Sign In Hero"
-          width={500}
-          height={500}
-          className="absolute bottom-32 right-10 opacity-90"
-          priority
-        />
-      </div>
+      <LoginCarousel />
     </div>
   );
 };
