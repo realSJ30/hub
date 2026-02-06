@@ -25,8 +25,8 @@ const DashboardPage = async () => {
       {/* Placeholder Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: "Total Properties", value: "12", trend: "+2 this month" },
-          { label: "Active Tenants", value: "8", trend: "100% occupancy" },
+          { label: "Total Units", value: "12", trend: "+2 this month" },
+          { label: "Active Bookings", value: "8", trend: "100% fully booked" },
           { label: "Pending Payments", value: "$1,250", trend: "3 overdue" },
         ].map((stat, i) => (
           <div

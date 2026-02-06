@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import {ElementType, useState, useEffect} from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -15,6 +15,7 @@ import {
   Building2,
   Users,
   CreditCard,
+  BookIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import { signOut } from "@/app/actions/auth.actions";
 
 interface SidebarItemProps {
   href: string;
-  icon: React.ElementType;
+  icon: ElementType;
   label: string;
   isCollapsed: boolean;
 }
@@ -40,10 +41,10 @@ const SidebarItem = ({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
+        "flex items-center gap-3 px-3 py-2.5 rounded-sm transition-all duration-200 group relative",
         isActive
-          ? "bg-primary text-white shadow-md shadow-primary/20"
-          : "text-neutral-600 hover:bg-neutral-100",
+          ? "bg-neutral-100 text-white"
+          : "text-neutral-600 hover:bg-neutral-50",
       )}
     >
       <Icon
@@ -51,12 +52,12 @@ const SidebarItem = ({
         className={cn(
           "min-w-[22px]",
           isActive
-            ? "text-white"
+            ? "text-primary"
             : "group-hover:scale-110 transition-transform",
         )}
       />
       {!isCollapsed && (
-        <span className="font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+        <span className="font-medium whitespace-nowrap overflow-hidden text-ellipsis text-black">
           {label}
         </span>
       )}
@@ -70,10 +71,10 @@ const SidebarItem = ({
 };
 
 export function AppSidebar() {
-  const [isCollapsed, setIsCollapsed] = React.useState(false);
-  const [isMounted, setIsMounted] = React.useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setIsMounted(true);
     const saved = localStorage.getItem("sidebar-collapsed");
     if (saved) setIsCollapsed(saved === "true");
@@ -98,7 +99,7 @@ export function AppSidebar() {
       {/* Toggle Button */}
       <button
         onClick={toggleSidebar}
-        className="absolute -right-3 top-20 bg-white border border-neutral-200 rounded-full p-1 hover:bg-neutral-50 shadow-sm z-50 transition-colors"
+        className="absolute -right-3 top-20 bg-white border border-neutral-200 rounded-md p-1 hover:bg-neutral-50 shadow-sm z-50 transition-colors"
       >
         {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
@@ -108,7 +109,7 @@ export function AppSidebar() {
           href="/dashboard"
           className="flex items-center gap-2 overflow-hidden"
         >
-          <div className="bg-primary p-1.5 rounded-lg shrink-0">
+          <div className="bg-primary p-1.5 rounded-sm shrink-0">
             <Car className="h-6 w-6 text-white" />
           </div>
           {!isCollapsed && (
@@ -129,15 +130,15 @@ export function AppSidebar() {
           isCollapsed={isCollapsed}
         />
         <SidebarItem
-          href="/properties"
-          icon={Building2}
-          label="Properties"
+          href="/units"
+          icon={Car}
+          label="Units"
           isCollapsed={isCollapsed}
         />
         <SidebarItem
-          href="/tenants"
-          icon={Users}
-          label="Tenants"
+          href="/bookings"
+          icon={BookIcon}
+          label="Bookings"
           isCollapsed={isCollapsed}
         />
         <SidebarItem
@@ -157,12 +158,6 @@ export function AppSidebar() {
           href="/profile"
           icon={User}
           label="Profile"
-          isCollapsed={isCollapsed}
-        />
-        <SidebarItem
-          href="/settings"
-          icon={Settings}
-          label="Settings"
           isCollapsed={isCollapsed}
         />
       </nav>
