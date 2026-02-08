@@ -160,6 +160,45 @@ export const createUnitSchema = z.object({
 
 **Why**: Single source of truth, prevents invalid data, provides TypeScript types.
 
+## 📊 Data Flow
+
+### **Fetching and Displaying Data**
+
+The application uses a consistent pattern for fetching and displaying live database data:
+
+```
+Database (PostgreSQL)
+    ↓
+Prisma ORM (type-safe queries)
+    ↓
+Server Action (getUnits)
+    ↓
+Serialization (Decimal → number, Date → string)
+    ↓
+Custom Hook (useUnits with TanStack Query)
+    ↓
+Client Component (Units page)
+    ↓
+Data Table (ShadCN + TanStack Table)
+```
+
+**Example: Units List Page**
+
+1. **Page Component** (`app/(private)/units/page.tsx`) uses `useUnits()` hook
+2. **Custom Hook** (`hooks/use-units.ts`) calls `getUnits()` Server Action
+3. **Server Action** (`app/actions/unit.actions.ts`) queries database via Prisma
+4. **Serialization** converts Prisma types to JSON-safe formats
+5. **TanStack Query** caches data and manages loading/error states
+6. **UI** renders data in table with sorting, filtering, and pagination
+
+**Benefits**:
+
+- Automatic loading and error states
+- Client-side caching (5-minute stale time)
+- Type safety from database to UI
+- Automatic refetching on window focus
+- Optimistic updates on mutations
+
 ## 🔐 Authentication Flow
 
 1. User signs up/logs in via Supabase Auth

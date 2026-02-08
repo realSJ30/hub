@@ -13,18 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UnitStatusBadge } from "./components/unit-status-badge";
+import type { SerializedUnit } from "@/lib/serializers/unit.serializer";
 
-export type Unit = {
-  id: string;
-  name: string;
-  brand: string;
-  plate: string;
-  transmission: string;
-  capacity: number;
-  price: number;
-  status: string;
-  imageUrl: string | null;
-};
+// Use the serialized unit type from the serializer
+export type Unit = SerializedUnit;
 
 export const columns: ColumnDef<Unit>[] = [
   {
@@ -131,7 +123,7 @@ export const columns: ColumnDef<Unit>[] = [
     },
   },
   {
-    accessorKey: "price",
+    accessorKey: "pricePerDay",
     header: ({ column }) => {
       return (
         <Button
@@ -145,7 +137,7 @@ export const columns: ColumnDef<Unit>[] = [
       );
     },
     cell: ({ row }) => {
-      const price = parseFloat(row.getValue("price"));
+      const price = parseFloat(row.getValue("pricePerDay"));
       return (
         <div>
           <span className="font-bold text-neutral-900">
