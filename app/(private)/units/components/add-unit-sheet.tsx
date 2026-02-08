@@ -26,10 +26,14 @@ import {
   createUnitSchema,
   type CreateUnitInput,
 } from "@/lib/validations/unit.schema";
+import { useCreateUnit } from "@/hooks";
 
 export const AddUnitSheet = () => {
   const [open, setOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Use the custom hook for creating units
+  const { mutate: createUnit, isPending } = useCreateUnit();
 
   const form = useForm({
     defaultValues: {
@@ -43,24 +47,30 @@ export const AddUnitSheet = () => {
       imageUrl: "",
     },
     onSubmit: async ({ value }) => {
-      setIsSubmitting(true);
       try {
         // Validate with Zod before submitting
         const validatedData = createUnitSchema.parse(value);
 
-        // TODO: Replace with actual API call
-        console.log("Creating unit:", validatedData);
+        // Clear any previous error messages
+        setErrorMessage(null);
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Close sheet and reset form on success
-        setOpen(false);
-        form.reset();
+        // Create the unit using the mutation hook
+        createUnit(validatedData, {
+          onSuccess: () => {
+            // Close sheet and reset form on success
+            setOpen(false);
+            form.reset();
+          },
+          onError: (error) => {
+            // Display error message to user
+            setErrorMessage(
+              error.message || "Failed to create unit. Please try again.",
+            );
+          },
+        });
       } catch (error) {
-        console.error("Failed to create unit:", error);
-      } finally {
-        setIsSubmitting(false);
+        console.error("Validation error:", error);
+        setErrorMessage("Please check your input and try again.");
       }
     },
   });
@@ -384,9 +394,16 @@ export const AddUnitSheet = () => {
             )}
           </form.Field>
 
+          {/* Error Message Display */}
+          {errorMessage && (
+            <div className="rounded-md bg-red-50 p-4 border border-red-200">
+              <p className="text-sm text-red-600">{errorMessage}</p>
+            </div>
+          )}
+
           <SheetFooter className="gap-4 px-0 flex item-center flex-row-reverse">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating...
@@ -399,7 +416,7 @@ export const AddUnitSheet = () => {
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              disabled={isSubmitting}
+              disabled={isPending}
             >
               Cancel
             </Button>

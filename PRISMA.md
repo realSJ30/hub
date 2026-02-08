@@ -91,7 +91,6 @@ import { prisma } from "@/lib/prisma";
 // Fetch all available units
 const units = await prisma.unit.findMany({
   where: { status: "AVAILABLE" },
-  include: { createdBy: true },
 });
 
 // Create a new unit
@@ -108,6 +107,8 @@ const newUnit = await prisma.unit.create({
   },
 });
 ```
+
+**Note**: In Prisma 7, the client is initialized with a driver adapter (`@prisma/adapter-pg`). See `lib/prisma.ts` for the setup.
 
 ## Important Notes
 

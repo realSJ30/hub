@@ -22,13 +22,13 @@ model Unit {
   pricePerDay  Decimal    @map("price_per_day") @db.Decimal(10, 2)
   status       UnitStatus @default(AVAILABLE)
   imageUrl     String?    @map("image_url")
-  
+
   // Timestamps
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
-  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   // Foreign key to Supabase auth.users
-  createdById  String     @map("created_by_id") @db.Uuid
+  createdById String @map("created_by_id") @db.Uuid
 
   @@map("units")
   @@schema("public")
