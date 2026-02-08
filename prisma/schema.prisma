@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["public"]
+}
+
+// Unit model for rental vehicles
+model Unit {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  brand        String
+  plate        String     @unique
+  transmission String
+  capacity     Int
+  pricePerDay  Decimal    @map("price_per_day") @db.Decimal(10, 2)
+  status       UnitStatus @default(AVAILABLE)
+  imageUrl     String?    @map("image_url")
+  
+  // Timestamps
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  
+  // Foreign key to Supabase auth.users
+  createdById  String     @map("created_by_id") @db.Uuid
+
+  @@map("units")
+  @@schema("public")
+}
+
+// Enum for unit status
+enum UnitStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+
+  @@schema("public")
+}

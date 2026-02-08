@@ -3,6 +3,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 ## 📖 Documentation
 
 - [Database Schema (ERD)](./DATABASE.md) — Reference for entities, fields, and relationships.
+- [Prisma ORM Setup](./PRISMA.md) — Guide for using Prisma with Supabase.
 
 ## Getting Started
 
