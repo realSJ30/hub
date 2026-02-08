@@ -51,8 +51,10 @@ erDiagram
       uuid customer_id
       date start_date
       date end_date
+      numeric price_per_day
       numeric total_price
       string status
+      string metadata
     }
 
     PAYMENTS {

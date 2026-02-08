@@ -31,7 +31,55 @@ model Unit {
   // Foreign key to Supabase auth.users
   createdById String @map("created_by_id") @db.Uuid
 
+  // Relationships
+  bookings Booking[]
+
   @@map("units")
+  @@schema("public")
+}
+
+// Customer model for people who rent units
+model Customer {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName String @map("full_name")
+  phone    String
+  email    String? @unique
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relationships
+  bookings Booking[]
+
+  @@map("customers")
+  @@schema("public")
+}
+
+// Booking model for rental transactions
+model Booking {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unitId      String        @map("unit_id") @db.Uuid
+  customerId  String        @map("customer_id") @db.Uuid
+  startDate   DateTime      @map("start_date")
+  endDate     DateTime      @map("end_date")
+  pricePerDay Decimal       @map("price_per_day") @db.Decimal(10, 2)
+  totalPrice  Decimal       @map("total_price") @db.Decimal(10, 2)
+  status      BookingStatus @default(PENDING)
+  metadata    String? // Flexible JSON-like string for extra data
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Foreign key for management
+  createdById String @map("created_by_id") @db.Uuid
+
+  // Relationships
+  unit     Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
   @@schema("public")
 }
 
@@ -40,6 +88,18 @@ enum UnitStatus {
   AVAILABLE
   RENTED
   MAINTENANCE
+
+  @@schema("public")
+}
+
+// Enum for booking status
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+  IN_PROGRESS
 
   @@schema("public")
 }
