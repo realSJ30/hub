@@ -8,18 +8,37 @@ import {
   CUSTOMERS_MOCK_DATA,
 } from "@/utils/constants/mock";
 
+import { useBookings } from "@/hooks";
+import { Loader2, AlertCircle } from "lucide-react";
+
 const BookingsPage = () => {
-  // Map mock data and lookup customer details for display
-  const data = BOOKINGS_MOCK_DATA.map((booking) => {
-    const customer = CUSTOMERS_MOCK_DATA.find(
-      (c) => c.id === booking.customerId,
+  const { data: bookingsResult, isLoading, isError, error } = useBookings();
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
+        <p className="text-neutral-500 text-sm animate-pulse">
+          Loading bookings...
+        </p>
+      </div>
     );
-    return {
-      ...booking,
-      customerName: customer?.fullName,
-      customerEmail: customer?.email,
-    };
-  });
+  }
+
+  if (isError) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-100 p-4 rounded-sm flex items-center gap-3 text-red-600">
+          <AlertCircle size={20} />
+          <p className="text-sm font-medium">
+            Error: {error?.message || "Failed to load bookings"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const data = bookingsResult?.data || [];
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto">

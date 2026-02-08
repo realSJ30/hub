@@ -29,7 +29,22 @@ Logic is centralized in **Server Actions**, ensuring security and server-side va
 
 - **TanStack Query**: Manages client-side server state, caching, and background refetching.
 - **TanStack Form**: Provides type-safe form state and validation.
-- **Custom Hooks**: Abstract specific operations (e.g., `useUnit` handles fleet management).
+- **Custom Hooks**: Abstract specific operations (e.g., `useUnit` handles fleet management, `useBooking` handles rental transactions).
+
+## 🗃️ Features
+
+### **Fleet Management (Units)**
+
+- View availability, status, and vehicle specs.
+- Advanced filtering and real-time updates.
+- Create, Edit, and Delete units with server-side validation.
+
+### **Booking Management (New)**
+
+- Centralized booking system linking Customers to Units.
+- Real-time price calculation and schedule tracking.
+- Automated customer record creation (deduplication by email).
+- Status-based workflow (Pending → Confirmed → In Progress → Completed).
 
 ### **Validation & Serialization**
 

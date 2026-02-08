@@ -31,15 +31,15 @@ export type Booking = {
   customerId: string;
   customerName?: string;
   customerEmail?: string | null;
-  startDate: Date;
-  endDate: Date;
+  startDate: string | Date;
+  endDate: string | Date;
   pricePerDay: number;
   totalPrice: number;
   location: string | null;
   status: string;
   metadata: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string | Date;
+  updatedAt: string | Date;
   createdById: string;
 };
 
@@ -88,8 +88,8 @@ export const columns: ColumnDef<Booking>[] = [
     id: "schedule",
     header: "Schedule",
     cell: ({ row }) => {
-      const start = row.original.startDate;
-      const end = row.original.endDate;
+      const start = new Date(row.original.startDate);
+      const end = new Date(row.original.endDate);
       const now = new Date();
 
       // Calculate progress
