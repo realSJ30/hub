@@ -6,14 +6,14 @@ This document outlines the database structure for **RentHub**, providing a refer
 
 ```mermaid
 erDiagram
-    UNITS ||--o{ RESERVATIONS : booked_in
+    UNITS ||--o{ BOOKINGS : booked_in
     UNITS ||--o{ MAINTENANCE_LOGS : has
 
-    CUSTOMERS ||--o{ RESERVATIONS : makes
+    CUSTOMERS ||--o{ BOOKINGS : makes
 
-    RESERVATIONS ||--o{ PAYMENTS : has
+    BOOKINGS ||--o{ PAYMENTS : has
 
-    USERS ||--o{ RESERVATIONS : manages
+    USERS ||--o{ BOOKINGS : manages
 
     USERS {
       uuid id
@@ -26,12 +26,16 @@ erDiagram
       uuid id
       string name
       string brand
+      int year
       string plate
       string transmission
       int capacity
-      numeric price_per_day
-      string status
+      decimal price_per_day
+      UnitStatus status
       string image_url
+      datetime created_at
+      datetime updated_at
+      uuid created_by_id
     }
 
     CUSTOMERS {
@@ -41,7 +45,7 @@ erDiagram
       string email
     }
 
-    RESERVATIONS {
+    BOOKINGS {
       uuid id
       uuid unit_id
       uuid customer_id
@@ -53,7 +57,7 @@ erDiagram
 
     PAYMENTS {
       uuid id
-      uuid reservation_id
+      uuid booking_id
       numeric amount
       string currency
       string provider
@@ -75,7 +79,7 @@ erDiagram
 
 ### 1. `USERS`
 
-Stores internal users (administrators, staff) who manage the system and reservations.
+Stores internal users (administrators, staff) who manage the system and bookings.
 
 - `id`: Unique identifier (UUID).
 - `role`: User role (e.g., 'admin', 'staff').
@@ -89,12 +93,16 @@ Represents the rental vehicles/units available in the fleet.
 - `id`: Unique identifier (UUID).
 - `name`: Vehicle name (e.g., "Toyota Hiace").
 - `brand`: Manufacturer (e.g., "Toyota").
-- `plate`: License plate number.
+- `year`: Manufacturing year (e.g., 2024).
+- `plate`: License plate number (Unique).
 - `transmission`: 'Automatic' or 'Manual'.
 - `capacity`: Maximum number of passengers.
 - `price_per_day`: Daily rental rate.
-- `status`: Current availability (e.g., 'Available', 'Rented', 'Maintenance').
+- `status`: Current availability (`AVAILABLE`, `RENTED`, `MAINTENANCE`).
 - `image_url`: Link to the unit's photo.
+- `created_at`: Timestamp of record creation.
+- `updated_at`: Timestamp of last update.
+- `created_by_id`: Reference to the user who created the unit.
 
 ### 3. `CUSTOMERS`
 
@@ -105,7 +113,7 @@ Stores information about the clients making bookings.
 - `phone`: Contact phone number.
 - `email`: Contact email address.
 
-### 4. `RESERVATIONS`
+### 4. `BOOKINGS`
 
 The core transactional table linking units, customers, and managers.
 
@@ -119,10 +127,10 @@ The core transactional table linking units, customers, and managers.
 
 ### 5. `PAYMENTS`
 
-Handles financial records associated with reservations.
+Handles financial records associated with bookings.
 
 - `id`: Unique identifier (UUID).
-- `reservation_id`: Foreign Key referencing `RESERVATIONS`.
+- `booking_id`: Foreign Key referencing `BOOKINGS`.
 - `amount`: Paid amount.
 - `currency`: Currency code (e.g., 'PHP', 'USD').
 - `provider`: Payment gateway or method (e.g., 'Stripe', 'Cash').
@@ -142,8 +150,8 @@ Tracks service history and costs for units.
 
 ## Relationship Summary
 
-- **Units - Reservations**: One unit can have many reservations over time (1:N).
-- **Customers - Reservations**: One customer can make multiple bookings (1:N).
-- **Reservations - Payments**: One reservation can result in one or more payment attempts/records (1:N).
+- **Units - Bookings**: One unit can have many bookings over time (1:N).
+- **Customers - Bookings**: One customer can make multiple bookings (1:N).
+- **Bookings - Payments**: One booking can result in one or more payment attempts/records (1:N).
 - **Units - Maintenance**: One unit tracks multiple maintenance events for health monitoring (1:N).
-- **Users - Reservations**: Administrative users manage many reservations (1:N).
+- **Users - Bookings**: Administrative users manage many bookings (1:N).
