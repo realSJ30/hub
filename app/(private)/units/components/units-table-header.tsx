@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Filter, Download, Plus } from "lucide-react";
+import { Filter, Download } from "lucide-react";
+import { AddUnitSheet } from "./add-unit-sheet";
 
 export const UnitsTableHeader = () => {
   return (
@@ -21,13 +22,7 @@ export const UnitsTableHeader = () => {
           <Download size={16} />
           Export CSV
         </Button>
-        <Button
-          size="sm"
-          className="gap-2 h-9 rounded-sm bg-primary hover:bg-primary/90"
-        >
-          <Plus size={16} />
-          Add New Unit
-        </Button>
+        <AddUnitSheet />
       </div>
     </div>
   );
