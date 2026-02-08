@@ -10,12 +10,21 @@ import type { Unit } from "@/lib/generated/prisma";
  * @param unit - The unit object from Prisma
  * @returns Serialized unit object safe for client components
  */
-export function serializeUnit(unit: Unit) {
+export function serializeUnit(unit: any) {
   return {
-    ...unit,
+    id: unit.id,
+    name: unit.name,
+    brand: unit.brand,
+    year: unit.year,
+    plate: unit.plate,
+    transmission: unit.transmission,
+    capacity: unit.capacity,
     pricePerDay: Number(unit.pricePerDay),
-    createdAt: unit.createdAt.toISOString(),
-    updatedAt: unit.updatedAt.toISOString(),
+    status: unit.status,
+    imageUrl: unit.imageUrl,
+    createdAt: unit.createdAt instanceof Date ? unit.createdAt.toISOString() : unit.createdAt,
+    updatedAt: unit.updatedAt instanceof Date ? unit.updatedAt.toISOString() : unit.updatedAt,
+    createdById: unit.createdById,
   };
 }
 
