@@ -183,3 +183,44 @@ export async function updateUnit(id: string, data: CreateUnitInput) {
   }
 }
 
+/**
+ * Server Action: Delete a unit
+ * 
+ * @param id - The ID of the unit to delete
+ * @returns Object indicating success or failure
+ */
+export async function deleteUnit(id: string) {
+  try {
+    // Get authenticated user
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: "Unauthorized",
+      };
+    }
+
+    // Delete unit from database
+    await prisma.unit.delete({
+      where: { id },
+    });
+
+    // Revalidate paths
+    revalidatePath("/units");
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error("Error deleting unit:", error);
+    return {
+      success: false,
+      error: "Failed to delete unit.",
+    };
+  }
+}
+
+

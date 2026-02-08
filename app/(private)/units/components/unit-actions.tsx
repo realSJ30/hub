@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EditUnitSheet } from "./edit-unit-sheet";
+import { DeleteUnitDialog } from "./delete-unit-dialog";
 import type { Unit } from "../columns";
 
 interface UnitActionsProps {
@@ -20,6 +21,7 @@ interface UnitActionsProps {
 
 export const UnitActions = ({ unit }: UnitActionsProps) => {
   const [editOpen, setEditOpen] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
 
   return (
     <div className="flex justify-end">
@@ -53,7 +55,7 @@ export const UnitActions = ({ unit }: UnitActionsProps) => {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => console.log("Delete", unit.id)}
+            onClick={() => setDeleteOpen(true)}
             className="cursor-pointer text-red-600 focus:text-red-600"
           >
             <Trash2 className="mr-2 h-4 w-4" />
@@ -62,7 +64,14 @@ export const UnitActions = ({ unit }: UnitActionsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Sheets & Dialogs */}
       <EditUnitSheet unit={unit} open={editOpen} onOpenChange={setEditOpen} />
+
+      <DeleteUnitDialog
+        unit={unit}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+      />
     </div>
   );
 };
