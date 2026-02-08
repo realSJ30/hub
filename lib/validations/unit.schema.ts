@@ -64,3 +64,18 @@ export const createUnitSchema = z.object({
 });
 
 export type CreateUnitInput = z.infer<typeof createUnitSchema>;
+
+export interface UnitFilters {
+  status?: string;
+  name?: string;
+  brand?: string;
+  plate?: string;
+  transmission?: string;
+  yearMin?: number;
+  yearMax?: number;
+  capacityMin?: number;
+  capacityMax?: number;
+  priceMin?: number;
+  priceMax?: number;
+}
+

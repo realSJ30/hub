@@ -1,34 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { getUnits } from "@/app/actions/unit.actions";
+import type { UnitFilters } from "@/lib/validations/unit.schema";
 
 /**
- * Custom hook for fetching all units
- * 
- * This hook uses TanStack Query to fetch and cache the list of units.
- * It handles loading, success, and error states automatically.
- * 
- * @returns TanStack Query query object with:
- *   - data: Array of units
- *   - isLoading: Loading state
- *   - isError: Error state
- *   - error: Error object if query failed
- *   - refetch: Function to manually refetch the data
- * 
- * @example
- * ```tsx
- * const { data, isLoading, isError, error } = useUnits();
- * 
- * if (isLoading) return <div>Loading...</div>;
- * if (isError) return <div>Error: {error.message}</div>;
- * 
- * return <div>{data?.data?.length} units found</div>;
- * ```
+ * Custom hook for fetching all units with optional filtering
  */
-export function useUnits() {
+export function useUnits(filters?: UnitFilters) {
   return useQuery({
-    queryKey: ["units"],
+    queryKey: ["units", filters],
     queryFn: async () => {
-      const result = await getUnits();
+      const result = await getUnits(filters);
       
       if (!result.success) {
         throw new Error(result.error || "Failed to fetch units");
@@ -36,7 +17,8 @@ export function useUnits() {
       
       return result;
     },
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-    refetchOnWindowFocus: true, // Refetch when user returns to the tab
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
   });
 }
+

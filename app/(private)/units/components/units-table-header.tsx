@@ -1,8 +1,20 @@
 import { Button } from "@/components/ui/button";
-import { Filter, Download } from "lucide-react";
+import { Download, X } from "lucide-react";
 import { AddUnitSheet } from "./add-unit-sheet";
+import { UnitFiltersDropdown } from "./unit-filters-dropdown";
+import type { UnitFilters } from "@/lib/validations/unit.schema";
 
-export const UnitsTableHeader = () => {
+interface UnitsTableHeaderProps {
+  filters: UnitFilters;
+  onFilterChange: (filters: UnitFilters) => void;
+}
+
+export const UnitsTableHeader = ({
+  filters,
+  onFilterChange,
+}: UnitsTableHeaderProps) => {
+  const hasFilters = Object.keys(filters).length > 0;
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
@@ -14,10 +26,20 @@ export const UnitsTableHeader = () => {
         </p>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" className="gap-2 h-9 rounded-sm">
-          <Filter size={16} />
-          Filter
-        </Button>
+        {hasFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onFilterChange({})}
+            className="h-9 px-3 text-xs text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-sm"
+          >
+            Clear All
+          </Button>
+        )}
+        <UnitFiltersDropdown
+          filters={filters}
+          onFilterChange={onFilterChange}
+        />
         <Button variant="outline" size="sm" className="gap-2 h-9 rounded-sm">
           <Download size={16} />
           Export CSV

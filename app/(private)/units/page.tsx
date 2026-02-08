@@ -1,18 +1,21 @@
 "use client";
 
+import * as React from "react";
 import { UnitsTableHeader } from "./components/units-table-header";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { useUnits } from "@/hooks";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import type { UnitFilters } from "@/lib/validations/unit.schema";
 
 const UnitsPage = () => {
-  const { data, isLoading, isError, error } = useUnits();
+  const [filters, setFilters] = React.useState<UnitFilters>({});
+  const { data, isLoading, isError, error } = useUnits(filters);
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto">
-      <UnitsTableHeader />
+      <UnitsTableHeader filters={filters} onFilterChange={setFilters} />
 
       {/* Loading State */}
       {isLoading && (

@@ -2,9 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { createUnitSchema, type CreateUnitInput } from "@/lib/validations/unit.schema";
+import { createUnitSchema, type CreateUnitInput, type UnitFilters } from "@/lib/validations/unit.schema";
 import { createClient } from "@/utils/supabase/server";
 import { serializeUnit, serializeUnits } from "@/lib/serializers/unit.serializer";
+import { Prisma } from "@/lib/generated/prisma";
 
 /**
  * Server Action: Create a new unit
@@ -89,15 +90,56 @@ export async function createUnit(data: CreateUnitInput) {
  * 
  * @returns Array of units or error
  */
-export async function getUnits() {
+export async function getUnits(filters?: UnitFilters) {
   try {
+    const where: Prisma.UnitWhereInput = {};
+
+    if (filters) {
+      if (filters.status && filters.status !== "ALL") {
+        where.status = filters.status as any;
+      }
+      if (filters.name) {
+        where.name = { contains: filters.name, mode: "insensitive" };
+      }
+      if (filters.brand) {
+        where.brand = { contains: filters.brand, mode: "insensitive" };
+      }
+      if (filters.plate) {
+        where.plate = { contains: filters.plate, mode: "insensitive" };
+      }
+      if (filters.transmission && filters.transmission !== "ALL") {
+        where.transmission = filters.transmission;
+      }
+      
+      if (filters.yearMin !== undefined || filters.yearMax !== undefined) {
+        where.year = {
+          gte: filters.yearMin,
+          lte: filters.yearMax,
+        };
+      }
+
+      if (filters.capacityMin !== undefined || filters.capacityMax !== undefined) {
+        where.capacity = {
+          gte: filters.capacityMin,
+          lte: filters.capacityMax,
+        };
+      }
+
+      if (filters.priceMin !== undefined || filters.priceMax !== undefined) {
+        where.pricePerDay = {
+          gte: filters.priceMin,
+          lte: filters.priceMax,
+        };
+      }
+    }
+
     const units = await prisma.unit.findMany({
+      where,
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    // Serialize the data for client components
     return {
       success: true,
       data: serializeUnits(units),
