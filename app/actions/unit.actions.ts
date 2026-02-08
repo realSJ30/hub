@@ -110,3 +110,76 @@ export async function getUnits() {
     };
   }
 }
+
+/**
+ * Server Action: Update an existing unit
+ * 
+ * @param id - The ID of the unit to update
+ * @param data - The unit data to update
+ * @returns Object containing either the updated unit or an error message
+ */
+export async function updateUnit(id: string, data: CreateUnitInput) {
+  try {
+    // Validate input data
+    const validationResult = createUnitSchema.safeParse(data);
+    
+    if (!validationResult.success) {
+      return {
+        success: false,
+        error: "Invalid input data",
+        details: validationResult.error.flatten().fieldErrors,
+      };
+    }
+
+    // Get authenticated user
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: "Unauthorized",
+      };
+    }
+
+    // Update unit in database
+    const unit = await prisma.unit.update({
+      where: { id },
+      data: {
+        name: validationResult.data.name,
+        brand: validationResult.data.brand,
+        year: validationResult.data.year,
+        plate: validationResult.data.plate.toUpperCase(),
+        transmission: validationResult.data.transmission,
+        capacity: validationResult.data.capacity,
+        pricePerDay: validationResult.data.pricePerDay,
+        status: validationResult.data.status,
+        imageUrl: validationResult.data.imageUrl || null,
+      },
+    });
+
+    // Revalidate paths
+    revalidatePath("/units");
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+      data: serializeUnit(unit),
+    };
+  } catch (error) {
+    console.error("Error updating unit:", error);
+    
+    if (error instanceof Error && error.message.includes("Unique constraint")) {
+      return {
+        success: false,
+        error: "A unit with this plate number already exists.",
+      };
+    }
+
+    return {
+      success: false,
+      error: "Failed to update unit.",
+    };
+  }
+}
+

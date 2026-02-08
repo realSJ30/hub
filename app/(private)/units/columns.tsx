@@ -1,21 +1,14 @@
 "use client";
 
+import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
-import { MoreHorizontal, Edit, Trash2, Eye, ArrowUpDown } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { UnitStatusBadge } from "./components/unit-status-badge";
+import { UnitActions } from "./components/unit-actions";
 import type { SerializedUnit } from "@/lib/serializers/unit.serializer";
 
-// Use the serialized unit type from the serializer
 export type Unit = SerializedUnit;
 
 export const columns: ColumnDef<Unit>[] = [
@@ -74,72 +67,60 @@ export const columns: ColumnDef<Unit>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => {
-      return (
-        <span className="text-neutral-600 font-medium">
-          {row.getValue("brand")}
-        </span>
-      );
-    },
+    cell: ({ row }) => (
+      <span className="text-neutral-600 font-medium">
+        {row.getValue("brand")}
+      </span>
+    ),
   },
   {
     accessorKey: "plate",
     header: "Plate",
-    cell: ({ row }) => {
-      return (
-        <span className="px-2 py-1 bg-neutral-100 rounded text-xs font-mono font-semibold text-neutral-700">
-          {row.getValue("plate")}
-        </span>
-      );
-    },
+    cell: ({ row }) => (
+      <span className="px-2 py-1 bg-neutral-100 rounded text-xs font-mono font-semibold text-neutral-700">
+        {row.getValue("plate")}
+      </span>
+    ),
   },
   {
     accessorKey: "transmission",
     header: "Transmission",
-    cell: ({ row }) => {
-      return (
-        <span className="text-neutral-600">{row.getValue("transmission")}</span>
-      );
-    },
+    cell: ({ row }) => (
+      <span className="text-neutral-600">{row.getValue("transmission")}</span>
+    ),
   },
   {
     accessorKey: "capacity",
-    header: ({ column }) => {
-      return (
-        <div className="text-center">
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-auto p-0 hover:bg-transparent"
-          >
-            Capacity
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      );
-    },
-    cell: ({ row }) => {
-      return (
-        <div className="text-center text-neutral-600">
-          {row.getValue("capacity")}pax
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "pricePerDay",
-    header: ({ column }) => {
-      return (
+    header: ({ column }) => (
+      <div className="text-center">
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-auto p-0 hover:bg-transparent"
         >
-          Price
+          Capacity
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      );
-    },
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div className="text-center text-neutral-600">
+        {row.getValue("capacity")}pax
+      </div>
+    ),
+  },
+  {
+    accessorKey: "pricePerDay",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="h-auto p-0 hover:bg-transparent"
+      >
+        Price
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => {
       const price = parseFloat(row.getValue("pricePerDay"));
       return (
@@ -157,61 +138,12 @@ export const columns: ColumnDef<Unit>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => {
-      return <UnitStatusBadge status={row.getValue("status")} />;
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
+    cell: ({ row }) => <UnitStatusBadge status={row.getValue("status")} />,
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
   {
     id: "actions",
     header: () => <div className="text-right">Actions</div>,
-    cell: ({ row }) => {
-      const unit = row.original;
-
-      return (
-        <div className="flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-neutral-400 hover:text-neutral-600"
-              >
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[160px]">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => console.log("View", unit.id)}
-                className="cursor-pointer"
-              >
-                <Eye className="mr-2 h-4 w-4" />
-                View details
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => console.log("Edit", unit.id)}
-                className="cursor-pointer"
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit unit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => console.log("Delete", unit.id)}
-                className="cursor-pointer text-red-600 focus:text-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete unit
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      );
-    },
+    cell: ({ row }) => <UnitActions unit={row.original} />,
   },
 ];

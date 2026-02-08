@@ -7,5 +7,5 @@
  * import { useCreateUnit, useUnits } from "@/hooks";
  */
 
-export { useCreateUnit } from "./use-create-unit";
+export { useCreateUnit, useUpdateUnit } from "./use-create-unit";
 export { useUnits } from "./use-units";
