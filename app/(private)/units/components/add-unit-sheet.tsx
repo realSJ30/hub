@@ -39,6 +39,7 @@ export const AddUnitSheet = () => {
     defaultValues: {
       name: "",
       brand: "",
+      year: new Date().getFullYear(),
       plate: "",
       transmission: "Automatic",
       capacity: 1,
@@ -157,6 +158,42 @@ export const AddUnitSheet = () => {
                   placeholder="e.g., Toyota"
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
+                />
+                {field.state.meta.errors.length > 0 && (
+                  <p className="text-sm text-red-600">
+                    {field.state.meta.errors[0]}
+                  </p>
+                )}
+              </div>
+            )}
+          </form.Field>
+
+          {/* Year */}
+          <form.Field
+            name="year"
+            validators={{
+              onChange: ({ value }) => {
+                const result = createUnitSchema.shape.year.safeParse(value);
+                return result.success
+                  ? undefined
+                  : result.error.errors[0]?.message;
+              },
+            }}
+          >
+            {(field) => (
+              <div className="space-y-2">
+                <Label htmlFor="year">
+                  Year <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="year"
+                  type="number"
+                  placeholder="e.g., 2024"
+                  value={field.state.value}
+                  onChange={(e) =>
+                    field.handleChange(parseInt(e.target.value) || 0)
+                  }
                   onBlur={field.handleBlur}
                 />
                 {field.state.meta.errors.length > 0 && (

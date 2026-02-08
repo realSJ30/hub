@@ -44,6 +44,7 @@ export async function createUnit(data: CreateUnitInput) {
       data: {
         name: validationResult.data.name,
         brand: validationResult.data.brand,
+        year: validationResult.data.year,
         plate: validationResult.data.plate.toUpperCase(), // Ensure uppercase
         transmission: validationResult.data.transmission,
         capacity: validationResult.data.capacity,

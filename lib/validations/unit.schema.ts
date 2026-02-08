@@ -17,6 +17,15 @@ export const createUnitSchema = z.object({
     .min(2, "Brand must be at least 2 characters")
     .max(50, "Brand must not exceed 50 characters"),
   
+  year: z
+    .number({
+      required_error: "Year is required",
+      invalid_type_error: "Year must be a number",
+    })
+    .int("Year must be a whole number")
+    .min(1900, "Year must be at least 1900")
+    .max(new Date().getFullYear() + 1, "Year cannot be too far in the future"),
+  
   plate: z
     .string()
     .min(1, "Plate number is required")

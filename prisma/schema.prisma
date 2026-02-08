@@ -16,6 +16,7 @@ model Unit {
   id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name         String
   brand        String
+  year         Int        @default(2024)
   plate        String     @unique
   transmission String
   capacity     Int

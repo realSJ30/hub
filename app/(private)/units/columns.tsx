@@ -51,7 +51,11 @@ export const columns: ColumnDef<Unit>[] = [
               </div>
             )}
           </div>
-          <span className="font-medium text-neutral-900">{unit.name}</span>
+          <p className="font-medium text-neutral-900">
+            {unit.name}
+            <br />
+            <span className="text-neutral-400 text-xs">{unit.year}</span>
+          </p>
         </div>
       );
     },
