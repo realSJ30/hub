@@ -8,12 +8,17 @@ import { type DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
+import { BookingTimePicker } from "./booking-time-picker";
 
 interface BookingDateRangePickerProps {
   startDate: Date | undefined;
   endDate: Date | undefined;
   pricePerDay?: number;
   onRangeChange: (range: DateRange | undefined) => void;
+  startTimeSelected?: boolean;
+  endTimeSelected?: boolean;
+  onStartTimeChange: (date: Date | undefined) => void;
+  onEndTimeChange: (date: Date | undefined) => void;
   className?: string;
 }
 
@@ -22,6 +27,10 @@ export function BookingDateRangePicker({
   endDate,
   pricePerDay,
   onRangeChange,
+  startTimeSelected = false,
+  endTimeSelected = false,
+  onStartTimeChange,
+  onEndTimeChange,
   className,
 }: BookingDateRangePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -49,11 +58,16 @@ export function BookingDateRangePicker({
               {startDate ? (
                 endDate && startDate.getTime() !== endDate.getTime() ? (
                   <>
-                    {format(startDate, "LLL dd, y")} -{" "}
-                    {format(endDate, "LLL dd, y")}
+                    {format(startDate, "LLL dd, y")}{" "}
+                    {startTimeSelected && format(startDate, "p")} -{" "}
+                    {format(endDate, "LLL dd, y")}{" "}
+                    {endTimeSelected && format(endDate, "p")}
                   </>
                 ) : (
-                  format(startDate, "LLL dd, y")
+                  <>
+                    {format(startDate, "LLL dd, y")}{" "}
+                    {startTimeSelected && format(startDate, "p")}
+                  </>
                 )
               ) : (
                 <span>Pick a date range</span>
@@ -69,7 +83,7 @@ export function BookingDateRangePicker({
         </button>
 
         {isOpen && (
-          <div className="border-t border-neutral-100 p-3 flex justify-center bg-neutral-50/30">
+          <div className="border-t border-neutral-100 p-3 flex flex-col items-center bg-neutral-50/30">
             <Calendar
               initialFocus
               mode="range"
@@ -89,15 +103,6 @@ export function BookingDateRangePicker({
               }
               components={{
                 DayButton: ({ children, modifiers, day, ...props }) => {
-                  const isWeekend =
-                    day.date.getDay() === 0 || day.date.getDay() === 6;
-
-                  const displayPrice = pricePerDay
-                    ? `₱${pricePerDay.toLocaleString()}`
-                    : isWeekend
-                      ? "$120"
-                      : "$100";
-
                   return (
                     <CalendarDayButton
                       day={day}
@@ -105,12 +110,25 @@ export function BookingDateRangePicker({
                       {...props}
                     >
                       {children}
-                      {!modifiers.outside && <span>{displayPrice}</span>}
                     </CalendarDayButton>
                   );
                 },
               }}
             />
+            <div className="flex gap-4 border-t border-neutral-100 pt-4 w-full">
+              <BookingTimePicker
+                label="Start Time"
+                date={startDate}
+                onTimeChange={onStartTimeChange}
+                isTimeSelected={startTimeSelected}
+              />
+              <BookingTimePicker
+                label="End Time"
+                date={endDate}
+                onTimeChange={onEndTimeChange}
+                isTimeSelected={endTimeSelected}
+              />
+            </div>
           </div>
         )}
       </div>

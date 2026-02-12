@@ -32,12 +32,20 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { type DateRange } from "react-day-picker";
 import { BookingDateRangePicker } from "./booking-date-range-picker";
-import { format, addDays, differenceInDays } from "date-fns";
+import {
+  format,
+  addDays,
+  differenceInDays,
+  setHours,
+  setMinutes,
+} from "date-fns";
 
 export const AddBookingSheet = () => {
   const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
+  const [startTimeSelected, setStartTimeSelected] = useState(false);
+  const [endTimeSelected, setEndTimeSelected] = useState(false);
 
   const { mutate: createBooking, isPending: isBookingPending } =
     useCreateBooking();
@@ -315,23 +323,56 @@ export const AddBookingSheet = () => {
                   ]}
                 >
                   {([startDate, endDate, pricePerDay]) => (
-                    <BookingDateRangePicker
-                      startDate={startDate as Date | undefined}
-                      endDate={endDate as Date | undefined}
-                      pricePerDay={Number(pricePerDay)}
-                      onRangeChange={(range: DateRange | undefined) => {
-                        form.setFieldValue("startDate", range?.from);
-                        form.setFieldValue("endDate", range?.to);
-                        if (range?.from && range?.to) {
-                          const total = calculateDerivedTotal(
-                            Number(pricePerDay),
-                            range.from,
-                            range.to,
-                          );
-                          form.setFieldValue("totalPrice", total);
-                        }
-                      }}
-                    />
+                    <div className="space-y-4">
+                      <BookingDateRangePicker
+                        startDate={startDate as Date | undefined}
+                        endDate={endDate as Date | undefined}
+                        pricePerDay={Number(pricePerDay)}
+                        startTimeSelected={startTimeSelected}
+                        endTimeSelected={endTimeSelected}
+                        onStartTimeChange={(newDate) => {
+                          form.setFieldValue("startDate", newDate);
+                          setStartTimeSelected(true);
+                        }}
+                        onEndTimeChange={(newDate) => {
+                          form.setFieldValue("endDate", newDate);
+                          setEndTimeSelected(true);
+                        }}
+                        onRangeChange={(range: DateRange | undefined) => {
+                          const currentStart = form.getFieldValue("startDate");
+                          const currentEnd = form.getFieldValue("endDate");
+
+                          let newStart = range?.from;
+                          let newEnd = range?.to;
+
+                          if (newStart && currentStart) {
+                            newStart = setHours(
+                              setMinutes(newStart, currentStart.getMinutes()),
+                              currentStart.getHours(),
+                            );
+                          }
+
+                          if (newEnd && currentEnd) {
+                            newEnd = setHours(
+                              setMinutes(newEnd, currentEnd.getMinutes()),
+                              currentEnd.getHours(),
+                            );
+                          }
+
+                          form.setFieldValue("startDate", newStart);
+                          form.setFieldValue("endDate", newEnd);
+
+                          if (newStart && newEnd) {
+                            const total = calculateDerivedTotal(
+                              Number(pricePerDay),
+                              newStart,
+                              newEnd,
+                            );
+                            form.setFieldValue("totalPrice", total);
+                          }
+                        }}
+                      />
+                    </div>
                   )}
                 </form.Subscribe>
               </div>
