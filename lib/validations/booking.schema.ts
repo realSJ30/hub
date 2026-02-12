@@ -16,16 +16,19 @@ export const createBookingSchema = z.object({
   unitId: z.string().uuid("Invalid unit selected"),
   startDate: z.date({
     required_error: "Start date is required",
-  }),
+  }).optional(),
   endDate: z.date({
     required_error: "End date is required",
-  }),
+  }).optional(),
   location: z.string().optional().or(z.literal("")),
   pricePerDay: z.number().positive("Price must be greater than 0"),
   totalPrice: z.number().positive("Total price must be greater than 0"),
   status: bookingStatusEnum.default("PENDING"),
   metadata: z.string().optional().or(z.literal("")),
-}).refine((data) => data.endDate > data.startDate, {
+}).refine((data) => {
+  if (!data.startDate || !data.endDate) return true;
+  return data.endDate > data.startDate;
+}, {
   message: "End date must be after start date",
   path: ["endDate"],
 });

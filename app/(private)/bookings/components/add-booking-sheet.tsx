@@ -21,14 +21,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Plus,
-  Loader2,
-  Calendar as CalendarIcon,
-  MapPin,
-  User,
-  Info,
-} from "lucide-react";
+import { Plus, Loader2, MapPin, User, Info, X, Tag } from "lucide-react";
 import {
   createBookingSchema,
   type CreateBookingInput,
@@ -36,11 +29,15 @@ import {
 import { createCustomerSchema } from "@/lib/validations/customer.schema";
 import { useCreateBooking, useUnits, useUpsertCustomer } from "@/hooks";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { type DateRange } from "react-day-picker";
+import { BookingDateRangePicker } from "./booking-date-range-picker";
+import { format, addDays, differenceInDays } from "date-fns";
 
 export const AddBookingSheet = () => {
   const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [tagInput, setTagInput] = useState("");
 
   const { mutate: createBooking, isPending: isBookingPending } =
     useCreateBooking();
@@ -57,15 +54,16 @@ export const AddBookingSheet = () => {
       customerPhone: "",
       customerEmail: "",
       unitId: "",
-      startDate: new Date(),
-      endDate: new Date(new Date().getTime() + 86400000), // Next day
+      startDate: new Date() as Date | undefined,
+      endDate: addDays(new Date(), 1) as Date | undefined,
       location: "",
       pricePerDay: 0,
       totalPrice: 0,
       status: "PENDING" as any,
-      metadata: "",
+      metadata: [] as string[], // Use array for form state
     },
     onSubmit: async ({ value }) => {
+      console.log(value.startDate, value.endDate);
       try {
         setErrorMessage(null);
 
@@ -88,6 +86,10 @@ export const AddBookingSheet = () => {
         const customerId = customerResult.data.id;
 
         // 3. Create Booking with the returned customerId
+        if (!value.startDate || !value.endDate) {
+          throw new Error("Start and End dates are required.");
+        }
+
         const start = new Date(value.startDate);
         const end = new Date(value.endDate);
 
@@ -100,7 +102,7 @@ export const AddBookingSheet = () => {
           totalPrice: Number(value.totalPrice),
           status: value.status,
           location: value.location,
-          metadata: value.metadata,
+          metadata: value.metadata.join(", "), // Convert array to string
         };
 
         const validatedBooking = createBookingSchema.parse(bookingPayload);
@@ -121,11 +123,30 @@ export const AddBookingSheet = () => {
     },
   });
 
-  // Calculate total price when pricePerDay or dates change
-  const updateTotalPrice = (price: number, start: Date, end: Date) => {
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-    form.setFieldValue("totalPrice", price * diffDays);
+  // Calculate total price based on unit and dates
+  const calculateDerivedTotal = (price: number, start: Date, end: Date) => {
+    const days = Math.max(differenceInDays(end, start), 1);
+    return price * days;
+  };
+
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const tag = tagInput.trim();
+      const currentTags = form.getFieldValue("metadata");
+      if (tag && !currentTags.includes(tag)) {
+        form.setFieldValue("metadata", [...currentTags, tag]);
+      }
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    const currentTags = form.getFieldValue("metadata");
+    form.setFieldValue(
+      "metadata",
+      currentTags.filter((t: string) => t !== tagToRemove),
+    );
   };
 
   return (
@@ -253,12 +274,18 @@ export const AddBookingSheet = () => {
                         const selectedUnit = units.find((u) => u.id === val);
                         if (selectedUnit) {
                           const price = Number(selectedUnit.pricePerDay);
+                          field.handleChange(val);
                           form.setFieldValue("pricePerDay", price);
-                          updateTotalPrice(
-                            price,
-                            new Date(form.state.values.startDate),
-                            new Date(form.state.values.endDate),
-                          );
+                          const start = form.getFieldValue("startDate");
+                          const end = form.getFieldValue("endDate");
+                          if (start && end) {
+                            const total = calculateDerivedTotal(
+                              price,
+                              start,
+                              end,
+                            );
+                            form.setFieldValue("totalPrice", total);
+                          }
                         }
                       }}
                     >
@@ -278,57 +305,84 @@ export const AddBookingSheet = () => {
                 </form.Field>
               </div>
 
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold">Booking Range</Label>
+                <form.Subscribe
+                  selector={(state) => [
+                    state.values.startDate,
+                    state.values.endDate,
+                    state.values.pricePerDay,
+                  ]}
+                >
+                  {([startDate, endDate, pricePerDay]) => (
+                    <BookingDateRangePicker
+                      startDate={startDate as Date | undefined}
+                      endDate={endDate as Date | undefined}
+                      pricePerDay={Number(pricePerDay)}
+                      onRangeChange={(range: DateRange | undefined) => {
+                        form.setFieldValue("startDate", range?.from);
+                        form.setFieldValue("endDate", range?.to);
+                        if (range?.from && range?.to) {
+                          const total = calculateDerivedTotal(
+                            Number(pricePerDay),
+                            range.from,
+                            range.to,
+                          );
+                          form.setFieldValue("totalPrice", total);
+                        }
+                      }}
+                    />
+                  )}
+                </form.Subscribe>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startDate" className="text-xs font-semibold">
-                    Start Date
+                  <Label
+                    htmlFor="pricePerDay"
+                    className="text-xs font-semibold"
+                  >
+                    Price/Day
                   </Label>
-                  <form.Field name="startDate">
+                  <form.Field name="pricePerDay">
                     {(field) => (
                       <Input
-                        id="startDate"
-                        type="datetime-local"
+                        id="pricePerDay"
+                        type="number"
                         className="h-10 rounded-sm"
-                        value={format(
-                          new Date(field.state.value),
-                          "yyyy-MM-dd'T'HH:mm",
-                        )}
+                        value={field.state.value}
                         onChange={(e) => {
-                          const date = new Date(e.target.value);
-                          field.handleChange(date);
-                          updateTotalPrice(
-                            form.state.values.pricePerDay,
-                            date,
-                            new Date(form.state.values.endDate),
-                          );
+                          const val = Number(e.target.value);
+                          field.handleChange(val);
+                          const start = form.getFieldValue("startDate");
+                          const end = form.getFieldValue("endDate");
+                          if (start && end) {
+                            const total = calculateDerivedTotal(
+                              val,
+                              start,
+                              end,
+                            );
+                            form.setFieldValue("totalPrice", total);
+                          }
                         }}
                       />
                     )}
                   </form.Field>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="endDate" className="text-xs font-semibold">
-                    End Date
+                  <Label htmlFor="totalPrice" className="text-xs font-semibold">
+                    Total Price
                   </Label>
-                  <form.Field name="endDate">
+                  <form.Field name="totalPrice">
                     {(field) => (
                       <Input
-                        id="endDate"
-                        type="datetime-local"
+                        id="totalPrice"
+                        type="number"
                         className="h-10 rounded-sm"
-                        value={format(
-                          new Date(field.state.value),
-                          "yyyy-MM-dd'T'HH:mm",
-                        )}
-                        onChange={(e) => {
-                          const date = new Date(e.target.value);
-                          field.handleChange(date);
-                          updateTotalPrice(
-                            form.state.values.pricePerDay,
-                            new Date(form.state.values.startDate),
-                            date,
-                          );
-                        }}
+                        value={field.state.value}
+                        onChange={(e) =>
+                          field.handleChange(Number(e.target.value))
+                        }
                       />
                     )}
                   </form.Field>
@@ -359,38 +413,63 @@ export const AddBookingSheet = () => {
                 </form.Field>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold">Status</Label>
-                  <form.Field name="status">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold">Status</Label>
+                <form.Field name="status">
+                  {(field) => (
+                    <Select
+                      value={field.state.value}
+                      onValueChange={(val) => field.handleChange(val)}
+                    >
+                      <SelectTrigger className="h-10 rounded-sm">
+                        <SelectValue placeholder="Booking Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                        <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </form.Field>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold">Metadata Tags</Label>
+                <div className="space-y-3">
+                  <Input
+                    placeholder="Press enter to add tag..."
+                    className="h-10 rounded-sm"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleAddTag}
+                  />
+                  <form.Field name="metadata">
                     {(field) => (
-                      <Select
-                        value={field.state.value}
-                        onValueChange={(val) => field.handleChange(val)}
-                      >
-                        <SelectTrigger className="h-10 rounded-sm">
-                          <SelectValue placeholder="Booking Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="PENDING">Pending</SelectItem>
-                          <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                          <SelectItem value="IN_PROGRESS">
-                            In Progress
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </form.Field>
-                </div>
-                <div className="bg-neutral-50 p-4 rounded-sm border border-neutral-100 flex flex-col justify-center">
-                  <span className="text-[10px] uppercase font-bold text-neutral-400 mb-1">
-                    Total Quote
-                  </span>
-                  <form.Field name="totalPrice">
-                    {(field) => (
-                      <span className="text-xl font-bold text-neutral-900">
-                        ₱{field.state.value.toLocaleString()}
-                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {field.state.value.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="pl-2 pr-1 py-1 gap-1 rounded-sm border-neutral-200"
+                          >
+                            <Tag size={10} className="text-neutral-500" />
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag)}
+                              className="hover:bg-neutral-200 rounded-full p-0.5"
+                            >
+                              <X size={12} />
+                            </button>
+                          </Badge>
+                        ))}
+                        {field.state.value.length === 0 && (
+                          <span className="text-[10px] text-neutral-400 italic">
+                            No tags added
+                          </span>
+                        )}
+                      </div>
                     )}
                   </form.Field>
                 </div>
