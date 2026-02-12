@@ -2,13 +2,19 @@
 
 import * as React from "react";
 import { format } from "date-fns";
-import { ChevronDown, Calendar as CalendarIcon, RefreshCw } from "lucide-react";
+import {
+  ChevronDown,
+  Calendar as CalendarIcon,
+  RefreshCw,
+  AlertCircle,
+} from "lucide-react";
 import { type DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { BookingTimePicker } from "./booking-time-picker";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface BookingDateRangePickerProps {
   startDate: Date | undefined;
@@ -23,6 +29,7 @@ interface BookingDateRangePickerProps {
   isLoadingAvailability?: boolean;
   onRefreshAvailability?: () => void;
   disabled?: boolean;
+  validationError?: string | null;
   className?: string;
 }
 
@@ -39,6 +46,7 @@ export function BookingDateRangePicker({
   isLoadingAvailability = false,
   onRefreshAvailability,
   disabled = false,
+  validationError,
   className,
 }: BookingDateRangePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -128,7 +136,7 @@ export function BookingDateRangePicker({
 
   return (
     <div className={cn("grid gap-2", className)}>
-      <div className="rounded-md border border-neutral-200 bg-white overflow-hidden">
+      <div className={cn("rounded-md border overflow-hidden", validationError && "border-red-500")}>
         <button
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -138,14 +146,16 @@ export function BookingDateRangePicker({
             disabled
               ? "bg-neutral-100 text-neutral-400 cursor-not-allowed"
               : "hover:bg-neutral-50",
+            validationError && "bg-red-50 hover:bg-red-50",
           )}
         >
-          <div className="flex items-center gap-2 text-neutral-600">
+          <div className="flex items-center gap-2 text-neutral-600 w-full">
             <CalendarIcon className="h-4 w-4 text-neutral-400" />
             <span
               className={cn(
-                "font-normal",
+                "font-normal flex items-center justify-between w-full",
                 !startDate && "text-muted-foreground",
+                validationError && "text-red-500",
               )}
             >
               {startDate ? (
@@ -155,6 +165,11 @@ export function BookingDateRangePicker({
                     {startTimeSelected && format(startDate, "p")} -{" "}
                     {format(endDate, "LLL dd, y")}{" "}
                     {endTimeSelected && format(endDate, "p")}
+                    {validationError && (
+                      <span className="text-red-500 mr-2 font-bold flex items-center gap-1">
+                        <AlertCircle size={14} />
+                      </span>
+                    )}
                   </>
                 ) : (
                   <>
@@ -175,6 +190,7 @@ export function BookingDateRangePicker({
               className={cn(
                 "h-4 w-4 text-neutral-400 transition-transform duration-200",
                 isOpen && "rotate-180",
+                validationError && "text-red-500",
               )}
             />
           </div>
@@ -182,6 +198,19 @@ export function BookingDateRangePicker({
 
         {isOpen && (
           <div className="border-t border-neutral-100 p-3 flex flex-col items-center bg-neutral-50/30 relative">
+            {validationError && (
+              <div className="p-3 border-b border-red-100 bg-red-50">
+                <Alert
+                  variant="destructive"
+                  className="py-2 border-0 bg-transparent"
+                >
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-xs ml-2">
+                    {validationError}
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
             <div className="absolute top-2 right-2 z-10">
               <Button
                 type="button"

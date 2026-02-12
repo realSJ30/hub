@@ -47,6 +47,30 @@ import {
   setMinutes,
 } from "date-fns";
 
+// Helper for overlap validation
+const checkOverlap = (
+  startDate: Date | undefined,
+  endDate: Date | undefined,
+  availabilityData: any[],
+) => {
+  if (!startDate || !endDate) return null;
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  if (start >= end) return null;
+
+  const hasOverlap = availabilityData?.some((booking) => {
+    const bookingStart = new Date(booking.startDate);
+    const bookingEnd = new Date(booking.endDate);
+    return start < bookingEnd && end > bookingStart;
+  });
+
+  return hasOverlap
+    ? "Selected range overlaps with an existing booking."
+    : null;
+};
+
 export const AddBookingSheet = () => {
   const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -81,6 +105,41 @@ export const AddBookingSheet = () => {
       console.log(value.startDate, value.endDate);
       try {
         setErrorMessage(null);
+
+        const availabilityData = unitsResult?.data
+          ? Array.isArray(unitsResult.data)
+            ? unitsResult.data
+            : [] // In case we need to fetch fresh availability, but for now we might rely on client state or separate check.
+          : [];
+
+        // However, availabilityData is specific to a unit. We can't access `availabilityData` from useUnitAvailability hook here directly because prompts are blocked.
+        // We need to re-fetch or assume the user hasn't bypassed the client-side check.
+        // For simplicity in this client-side first approach, we'll assume the client check inside form.Subscribe works visually.
+        // BUT strict requirement says "The form's submit button still gets triggered. This should not happen."
+
+        // To do this robustly in onSubmit without top-level state:
+        // We can pass the `availabilityData` from the hook into the scope if we define it outside? No, hooks are inside component.
+        // We can trust the validationError if we had access to it, but we removed it from top level.
+
+        // BETTER: We can just let the onSubmit logic rely on a quick re-check if we have access to the data.
+        // Since we can't easily access `availabilityData` derived from the hook inside this callback without refs or state,
+        // and we removed the state to fix the infinite loop...
+
+        // ALTERNATIVE: Use a ref to store the current validation error state, updated during render.
+        // But that's hacky.
+
+        // Let's use `form.store` to get the latest unitId, then we need the availability.
+        // Actually, `useUnitAvailability` likely caches data.
+        // We can't call hooks inside onSubmit.
+
+        // Solution: Keep `availabilityData` at top level (it's fine, unitId changes rarely).
+        // Pass a `validateBooking` flag or ref?
+
+        // Simplest valid React pattern:
+        // Use a ref to track the current validity based on the last render's check.
+        if (validationErrorRef.current) {
+          throw new Error(validationErrorRef.current);
+        }
 
         // 1. Separate Customer Data
         const customerParseResult = createCustomerSchema.safeParse({
@@ -147,7 +206,11 @@ export const AddBookingSheet = () => {
           },
         });
       } catch (error: any) {
-        console.error("Workflow error:", error);
+        if (
+          error.message !== "Selected range overlaps with an existing booking."
+        ) {
+          console.error("Workflow error:", error);
+        }
         setErrorMessage(error.message || "An unexpected error occurred.");
       }
     },
@@ -165,6 +228,21 @@ export const AddBookingSheet = () => {
   const availabilityData = React.useMemo(() => {
     return availabilityResult?.success ? availabilityResult.data : [];
   }, [availabilityResult]);
+
+  const validationErrorRef = React.useRef<string | null>(null);
+
+  // We calculate validation error inside form.Subscribe to avoid top-level re-renders
+  // but we need to signal to onSubmit to block.
+  // We'll update the ref inside the render prop or effect?
+  // Updating ref during render is okay if it doesn't trigger re-render.
+
+  // Actually, we can just keep availabilityData at top level (that wasn't the issue).
+  // The issue was `startDate` and `endDate` causing re-renders.
+
+  // So:
+  // 1. availabilityData is calculated at top level.
+  // 2. form.Subscribe calculates error during render.
+  // 3. We can update the ref there.
 
   // Calculate total price based on unit and dates
   const calculateDerivedTotal = (price: number, start: Date, end: Date) => {
@@ -231,7 +309,6 @@ export const AddBookingSheet = () => {
 
             <div className="grid gap-4">
               <div className="space-y-2">
-                
                 <form.Field
                   name="customerName"
                   validators={{
@@ -447,62 +524,75 @@ export const AddBookingSheet = () => {
                     state.values.pricePerDay,
                   ]}
                 >
-                  {([startDate, endDate, pricePerDay]) => (
-                    <div className="space-y-4">
-                      <BookingDateRangePicker
-                        startDate={startDate as Date | undefined}
-                        endDate={endDate as Date | undefined}
-                        pricePerDay={Number(pricePerDay)}
-                        startTimeSelected={startTimeSelected}
-                        endTimeSelected={endTimeSelected}
-                        availabilityData={availabilityData}
-                        isLoadingAvailability={isLoadingAvailability}
-                        onRefreshAvailability={refreshAvailability}
-                        disabled={!selectedUnitId}
-                        onStartTimeChange={(newDate) => {
-                          form.setFieldValue("startDate", newDate);
-                          setStartTimeSelected(true);
-                        }}
-                        onEndTimeChange={(newDate) => {
-                          form.setFieldValue("endDate", newDate);
-                          setEndTimeSelected(true);
-                        }}
-                        onRangeChange={(range: DateRange | undefined) => {
-                          const currentStart = form.getFieldValue("startDate");
-                          const currentEnd = form.getFieldValue("endDate");
+                  {([startDate, endDate, pricePerDay]) => {
+                    const validationError = checkOverlap(
+                      startDate as Date | undefined,
+                      endDate as Date | undefined,
+                      availabilityData || [],
+                    );
 
-                          let newStart = range?.from;
-                          let newEnd = range?.to;
+                    // Update ref for onSubmit check
+                    validationErrorRef.current = validationError;
 
-                          if (newStart && currentStart) {
-                            newStart = setHours(
-                              setMinutes(newStart, currentStart.getMinutes()),
-                              currentStart.getHours(),
-                            );
-                          }
+                    return (
+                      <div className="space-y-4">
+                        <BookingDateRangePicker
+                          startDate={startDate as Date | undefined}
+                          endDate={endDate as Date | undefined}
+                          pricePerDay={Number(pricePerDay)}
+                          startTimeSelected={startTimeSelected}
+                          endTimeSelected={endTimeSelected}
+                          availabilityData={availabilityData}
+                          isLoadingAvailability={isLoadingAvailability}
+                          onRefreshAvailability={refreshAvailability}
+                          disabled={!selectedUnitId}
+                          validationError={validationError}
+                          onStartTimeChange={(newDate) => {
+                            form.setFieldValue("startDate", newDate);
+                            setStartTimeSelected(true);
+                          }}
+                          onEndTimeChange={(newDate) => {
+                            form.setFieldValue("endDate", newDate);
+                            setEndTimeSelected(true);
+                          }}
+                          onRangeChange={(range: DateRange | undefined) => {
+                            const currentStart =
+                              form.getFieldValue("startDate");
+                            const currentEnd = form.getFieldValue("endDate");
 
-                          if (newEnd && currentEnd) {
-                            newEnd = setHours(
-                              setMinutes(newEnd, currentEnd.getMinutes()),
-                              currentEnd.getHours(),
-                            );
-                          }
+                            let newStart = range?.from;
+                            let newEnd = range?.to;
 
-                          form.setFieldValue("startDate", newStart);
-                          form.setFieldValue("endDate", newEnd);
+                            if (newStart && currentStart) {
+                              newStart = setHours(
+                                setMinutes(newStart, currentStart.getMinutes()),
+                                currentStart.getHours(),
+                              );
+                            }
 
-                          if (newStart && newEnd) {
-                            const total = calculateDerivedTotal(
-                              Number(pricePerDay),
-                              newStart,
-                              newEnd,
-                            );
-                            form.setFieldValue("totalPrice", total);
-                          }
-                        }}
-                      />
-                    </div>
-                  )}
+                            if (newEnd && currentEnd) {
+                              newEnd = setHours(
+                                setMinutes(newEnd, currentEnd.getMinutes()),
+                                currentEnd.getHours(),
+                              );
+                            }
+
+                            form.setFieldValue("startDate", newStart);
+                            form.setFieldValue("endDate", newEnd);
+
+                            if (newStart && newEnd) {
+                              const total = calculateDerivedTotal(
+                                Number(pricePerDay),
+                                newStart,
+                                newEnd,
+                              );
+                              form.setFieldValue("totalPrice", total);
+                            }
+                          }}
+                        />
+                      </div>
+                    );
+                  }}
                 </form.Subscribe>
               </div>
 
