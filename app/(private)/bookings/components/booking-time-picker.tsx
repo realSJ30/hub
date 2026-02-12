@@ -11,12 +11,14 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { format, setHours, setMinutes, startOfDay } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface BookingTimePickerProps {
   label: string;
   date: Date | undefined;
   onTimeChange: (newDate: Date | undefined) => void;
   isTimeSelected?: boolean;
+  disabledHours?: number[];
 }
 
 export function BookingTimePicker({
@@ -24,6 +26,7 @@ export function BookingTimePicker({
   date,
   onTimeChange,
   isTimeSelected = false,
+  disabledHours = [],
 }: BookingTimePickerProps) {
   const timeOptions = React.useMemo(() => {
     const options = [];
@@ -63,8 +66,19 @@ export function BookingTimePicker({
         </SelectTrigger>
         <SelectContent>
           {timeOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              disabled={disabledHours.includes(parseInt(option.value))}
+            >
+              <span
+                className={cn(
+                  disabledHours.includes(parseInt(option.value)) &&
+                    "line-through opacity-50",
+                )}
+              >
+                {option.label}
+              </span>
             </SelectItem>
           ))}
         </SelectContent>

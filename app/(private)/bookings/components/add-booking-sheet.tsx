@@ -1,7 +1,8 @@
 "use client";
 
+import * as React from "react";
 import { useState } from "react";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,10 +25,16 @@ import {
 import { Plus, Loader2, MapPin, User, Info, X, Tag } from "lucide-react";
 import {
   createBookingSchema,
+  baseBookingSchema,
   type CreateBookingInput,
 } from "@/lib/validations/booking.schema";
 import { createCustomerSchema } from "@/lib/validations/customer.schema";
-import { useCreateBooking, useUnits, useUpsertCustomer } from "@/hooks";
+import {
+  useCreateBooking,
+  useUnits,
+  useUpsertCustomer,
+  useUnitAvailability,
+} from "@/hooks";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { type DateRange } from "react-day-picker";
@@ -76,14 +83,21 @@ export const AddBookingSheet = () => {
         setErrorMessage(null);
 
         // 1. Separate Customer Data
-        const customerData = createCustomerSchema.parse({
+        const customerParseResult = createCustomerSchema.safeParse({
           fullName: value.customerName,
           phone: value.customerPhone,
           email: value.customerEmail,
         });
 
+        if (!customerParseResult.success) {
+          const errors = customerParseResult.error.issues
+            .map((i) => i.message)
+            .join(", ");
+          throw new Error(errors || "Invalid customer data");
+        }
+
         // 2. Upsert Customer first
-        const customerResult = await upsertCustomer(customerData);
+        const customerResult = await upsertCustomer(customerParseResult.data);
 
         if (!customerResult.success || !customerResult.data) {
           throw new Error(
@@ -113,9 +127,17 @@ export const AddBookingSheet = () => {
           metadata: value.metadata.join(", "), // Convert array to string
         };
 
-        const validatedBooking = createBookingSchema.parse(bookingPayload);
+        const validatedBookingResult =
+          createBookingSchema.safeParse(bookingPayload);
 
-        createBooking(validatedBooking, {
+        if (!validatedBookingResult.success) {
+          const errors = validatedBookingResult.error.issues
+            .map((i) => i.message)
+            .join(", ");
+          throw new Error(errors || "Invalid booking details");
+        }
+
+        createBooking(validatedBookingResult.data, {
           onSuccess: () => {
             setOpen(false);
             form.reset();
@@ -130,6 +152,19 @@ export const AddBookingSheet = () => {
       }
     },
   });
+
+  // Get current unitId from form to fetch availability
+  const selectedUnitId = useStore(form.store, (state) => state.values.unitId);
+
+  const {
+    data: availabilityResult,
+    isLoading: isLoadingAvailability,
+    refetch: refreshAvailability,
+  } = useUnitAvailability(selectedUnitId);
+
+  const availabilityData = React.useMemo(() => {
+    return availabilityResult?.success ? availabilityResult.data : [];
+  }, [availabilityResult]);
 
   // Calculate total price based on unit and dates
   const calculateDerivedTotal = (price: number, start: Date, end: Date) => {
@@ -196,19 +231,48 @@ export const AddBookingSheet = () => {
 
             <div className="grid gap-4">
               <div className="space-y-2">
-                <Label htmlFor="customerName" className="text-xs font-semibold">
-                  Full Name
-                </Label>
-                <form.Field name="customerName">
+                
+                <form.Field
+                  name="customerName"
+                  validators={{
+                    onChange: ({ value }) => {
+                      const result =
+                        createCustomerSchema.shape.fullName.safeParse(value);
+                      return result.success
+                        ? undefined
+                        : result.error.errors[0]?.message;
+                    },
+                    onBlur: ({ value }) => {
+                      const result =
+                        createCustomerSchema.shape.fullName.safeParse(value);
+                      return result.success
+                        ? undefined
+                        : result.error.errors[0]?.message;
+                    },
+                  }}
+                >
                   {(field) => (
-                    <Input
-                      id="customerName"
-                      placeholder="e.g. John Doe"
-                      className="h-10 rounded-sm"
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                    />
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="customerName"
+                        className="text-xs font-semibold"
+                      >
+                        Full Name
+                      </Label>
+                      <Input
+                        id="customerName"
+                        placeholder="e.g. John Doe"
+                        className="h-10 rounded-sm"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                      />
+                      {field.state.meta.errors.length > 0 && (
+                        <p className="text-xs text-red-600 font-medium">
+                          {field.state.meta.errors[0]}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </form.Field>
               </div>
@@ -221,16 +285,41 @@ export const AddBookingSheet = () => {
                   >
                     Phone Number
                   </Label>
-                  <form.Field name="customerPhone">
+                  <form.Field
+                    name="customerPhone"
+                    validators={{
+                      onChange: ({ value }) => {
+                        const result =
+                          createCustomerSchema.shape.phone.safeParse(value);
+                        return result.success
+                          ? undefined
+                          : result.error.errors[0]?.message;
+                      },
+                      onBlur: ({ value }) => {
+                        const result =
+                          createCustomerSchema.shape.phone.safeParse(value);
+                        return result.success
+                          ? undefined
+                          : result.error.errors[0]?.message;
+                      },
+                    }}
+                  >
                     {(field) => (
-                      <Input
-                        id="customerPhone"
-                        placeholder="+63 9xx..."
-                        className="h-10 rounded-sm"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                      />
+                      <div className="space-y-2">
+                        <Input
+                          id="customerPhone"
+                          placeholder="+63 9xx..."
+                          className="h-10 rounded-sm"
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                        />
+                        {field.state.meta.errors.length > 0 && (
+                          <p className="text-xs text-red-600 font-medium">
+                            {field.state.meta.errors[0]}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </form.Field>
                 </div>
@@ -241,17 +330,35 @@ export const AddBookingSheet = () => {
                   >
                     Email (Optional)
                   </Label>
-                  <form.Field name="customerEmail">
+                  <form.Field
+                    name="customerEmail"
+                    validators={{
+                      onChange: ({ value }) => {
+                        const result =
+                          createCustomerSchema.shape.email.safeParse(value);
+                        return result.success
+                          ? undefined
+                          : result.error.errors[0]?.message;
+                      },
+                    }}
+                  >
                     {(field) => (
-                      <Input
-                        id="customerEmail"
-                        type="email"
-                        placeholder="john@example.com"
-                        className="h-10 rounded-sm"
-                        value={field.state.value || ""}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                      />
+                      <div className="space-y-2">
+                        <Input
+                          id="customerEmail"
+                          type="email"
+                          placeholder="john@example.com"
+                          className="h-10 rounded-sm"
+                          value={field.state.value || ""}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                        />
+                        {field.state.meta.errors.length > 0 && (
+                          <p className="text-xs text-red-600 font-medium">
+                            {field.state.meta.errors[0]}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </form.Field>
                 </div>
@@ -273,42 +380,60 @@ export const AddBookingSheet = () => {
                 <Label htmlFor="unitId" className="text-xs font-semibold">
                   Select Unit
                 </Label>
-                <form.Field name="unitId">
+                <form.Field
+                  name="unitId"
+                  validators={{
+                    onChange: ({ value }) => {
+                      const result =
+                        baseBookingSchema.shape.unitId.safeParse(value);
+                      return result.success
+                        ? undefined
+                        : result.error.errors[0]?.message;
+                    },
+                  }}
+                >
                   {(field) => (
-                    <Select
-                      value={field.state.value}
-                      onValueChange={(val) => {
-                        field.handleChange(val);
-                        const selectedUnit = units.find((u) => u.id === val);
-                        if (selectedUnit) {
-                          const price = Number(selectedUnit.pricePerDay);
+                    <div className="space-y-2">
+                      <Select
+                        value={field.state.value}
+                        onValueChange={(val) => {
                           field.handleChange(val);
-                          form.setFieldValue("pricePerDay", price);
-                          const start = form.getFieldValue("startDate");
-                          const end = form.getFieldValue("endDate");
-                          if (start && end) {
-                            const total = calculateDerivedTotal(
-                              price,
-                              start,
-                              end,
-                            );
-                            form.setFieldValue("totalPrice", total);
+                          const selectedUnit = units.find((u) => u.id === val);
+                          if (selectedUnit) {
+                            const price = Number(selectedUnit.pricePerDay);
+                            field.handleChange(val);
+                            form.setFieldValue("pricePerDay", price);
+                            const start = form.getFieldValue("startDate");
+                            const end = form.getFieldValue("endDate");
+                            if (start && end) {
+                              const total = calculateDerivedTotal(
+                                price,
+                                start,
+                                end,
+                              );
+                              form.setFieldValue("totalPrice", total);
+                            }
                           }
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="h-10 rounded-sm">
-                        <SelectValue placeholder="Select a vehicle" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {units.map((unit) => (
-                          <SelectItem key={unit.id} value={unit.id}>
-                            {unit.name} ({unit.brand}) - ₱
-                            {Number(unit.pricePerDay).toLocaleString()}/day
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        }}
+                      >
+                        <SelectTrigger className="h-10 rounded-sm">
+                          <SelectValue placeholder="Select a vehicle" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {units.map((unit) => (
+                            <SelectItem key={unit.id} value={unit.id}>
+                              {unit.name} ({unit.brand}) - ₱
+                              {Number(unit.pricePerDay).toLocaleString()}/day
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {field.state.meta.errors.length > 0 && (
+                        <p className="text-xs text-red-600 font-medium">
+                          {field.state.meta.errors[0]}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </form.Field>
               </div>
@@ -330,6 +455,10 @@ export const AddBookingSheet = () => {
                         pricePerDay={Number(pricePerDay)}
                         startTimeSelected={startTimeSelected}
                         endTimeSelected={endTimeSelected}
+                        availabilityData={availabilityData}
+                        isLoadingAvailability={isLoadingAvailability}
+                        onRefreshAvailability={refreshAvailability}
+                        disabled={!selectedUnitId}
                         onStartTimeChange={(newDate) => {
                           form.setFieldValue("startDate", newDate);
                           setStartTimeSelected(true);

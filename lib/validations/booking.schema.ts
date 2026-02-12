@@ -11,7 +11,7 @@ export const bookingStatusEnum = z.enum([
   required_error: "Booking status is required",
 });
 
-export const createBookingSchema = z.object({
+export const baseBookingSchema = z.object({
   customerId: z.string().uuid("Invalid customer selected"),
   unitId: z.string().uuid("Invalid unit selected"),
   startDate: z.date({
@@ -25,7 +25,9 @@ export const createBookingSchema = z.object({
   totalPrice: z.number().positive("Total price must be greater than 0"),
   status: bookingStatusEnum.default("PENDING"),
   metadata: z.string().optional().or(z.literal("")),
-}).refine((data) => {
+});
+
+export const createBookingSchema = baseBookingSchema.refine((data) => {
   return data.endDate > data.startDate;
 }, {
   message: "End date must be after start date",

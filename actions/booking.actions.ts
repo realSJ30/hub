@@ -90,3 +90,41 @@ export async function getBookings() {
     };
   }
 }
+
+export async function getUnitAvailability(unitId: string) {
+  try {
+    if (!unitId) {
+      return { success: false, error: "Unit ID is required" };
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where: {
+        unitId,
+        status: {
+          in: ["PENDING", "CONFIRMED", "IN_PROGRESS"],
+        },
+        endDate: {
+          gte: new Date(),
+        },
+      },
+      select: {
+        startDate: true,
+        endDate: true,
+      },
+    });
+
+    return {
+      success: true,
+      data: bookings.map(b => ({
+        startDate: b.startDate.toISOString(),
+        endDate: b.endDate.toISOString(),
+      })),
+    };
+  } catch (error) {
+    console.error("Error fetching unit availability:", error);
+    return {
+      success: false,
+      error: "Failed to fetch unit availability.",
+    };
+  }
+}
