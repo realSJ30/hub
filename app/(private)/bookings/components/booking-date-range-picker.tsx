@@ -86,8 +86,28 @@ export function BookingDateRangePicker({
       const d = new Date(date);
       d.setHours(0, 0, 0, 0);
 
+      const now = new Date();
+      const today = new Date(now);
+      today.setHours(0, 0, 0, 0);
+
+      const isToday = d.getTime() === today.getTime();
+      const isPast = d.getTime() < today.getTime();
+      const currentHour = now.getHours();
+
       const disabledHours: number[] = [];
+
+      // If date is in the past, disable all hours
+      if (isPast) {
+        return Array.from({ length: 24 }, (_, i) => i);
+      }
+
       for (let h = 0; h < 24; h++) {
+        // If today, disable past hours
+        if (isToday && h < currentHour) {
+          disabledHours.push(h);
+          continue;
+        }
+
         const hourStart = new Date(d);
         hourStart.setHours(h, 0, 0, 0);
         const hourEnd = new Date(d);
