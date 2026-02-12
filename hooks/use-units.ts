@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getUnits } from "@/app/actions/unit.actions";
+import { getUnits } from "@/actions/unit.actions";
 import type { UnitFilters } from "@/lib/validations/unit.schema";
 
 /**

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createBooking, getBookings } from "@/app/actions/booking.actions";
+import { createBooking, getBookings } from "@/actions/booking.actions";
 import type { CreateBookingInput } from "@/lib/validations/booking.schema";
 
 export function useBookings() {

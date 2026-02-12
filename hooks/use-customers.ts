@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { upsertCustomer, getCustomers } from "@/app/actions/customer.actions";
+import { upsertCustomer, getCustomers } from "@/actions/customer.actions";
 import type { CreateCustomerInput } from "@/lib/validations/customer.schema";
 
 export function useCustomers() {

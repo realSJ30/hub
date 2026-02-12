@@ -1,6 +1,6 @@
 "use client";
 
-import {ElementType, useState, useEffect} from "react";
+import { ElementType, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { signOut } from "@/app/actions/auth.actions";
+import { signOut } from "@/actions/auth.actions";
 
 interface SidebarItemProps {
   href: string;

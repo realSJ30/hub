@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createUnit, updateUnit, deleteUnit } from "@/app/actions/unit.actions";
+import { createUnit, updateUnit, deleteUnit } from "@/actions/unit.actions";
 import type { CreateUnitInput } from "@/lib/validations/unit.schema";
 
 /**
