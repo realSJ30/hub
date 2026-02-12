@@ -24,6 +24,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import {
+  BOOKING_STATUS_LABELS,
+  BOOKING_STATUS_STYLES,
+} from "@/utils/constants/booking";
 
 export type Booking = {
   id: string;
@@ -174,29 +178,16 @@ export const columns: ColumnDef<Booking>[] = [
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
-
-      const getStatusStyles = (status: string) => {
-        switch (status) {
-          case "CONFIRMED":
-            return "bg-emerald-50 text-emerald-700 border-emerald-200";
-          case "PENDING":
-            return "bg-amber-50 text-amber-700 border-amber-200";
-          case "CANCELLED":
-            return "bg-red-50 text-red-700 border-red-200";
-          case "COMPLETED":
-            return "bg-blue-50 text-blue-700 border-blue-200";
-          case "IN_PROGRESS":
-            return "bg-indigo-50 text-indigo-700 border-indigo-200";
-          default:
-            return "bg-neutral-50 text-neutral-700 border-neutral-200";
-        }
-      };
+      const label = BOOKING_STATUS_LABELS[status] || status;
+      const styles =
+        BOOKING_STATUS_STYLES[status] ||
+        "bg-neutral-50 text-neutral-700 border-neutral-200";
 
       return (
         <div
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusStyles(status)}`}
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${styles}`}
         >
-          {status}
+          {label}
         </div>
       );
     },
