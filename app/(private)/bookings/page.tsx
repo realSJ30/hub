@@ -11,13 +11,30 @@ import {
 import { useBookings } from "@/hooks";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AddBookingSheet } from "./components/add-booking-sheet";
+import { useState } from "react";
+import { type Booking } from "./columns";
 
 const BookingsPage = () => {
   const { data: bookingsResult, isLoading, isError, error } = useBookings();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | undefined>(
+    undefined,
+  );
+
+  const handleAdd = () => {
+    setSelectedBooking(undefined);
+    setIsSheetOpen(true);
+  };
+
+  const handleEdit = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsSheetOpen(true);
+  };
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto">
-      <BookingsTableHeader />
+      <BookingsTableHeader onAdd={handleAdd} />
 
       {/* Loading State */}
       {isLoading && (
@@ -51,9 +68,19 @@ const BookingsPage = () => {
       {/* Data Table */}
       {!isLoading && !isError && (
         <div className="mt-6">
-          <DataTable columns={columns} data={bookingsResult?.data || []} />
+          <DataTable
+            columns={columns}
+            data={bookingsResult?.data || []}
+            onEdit={handleEdit}
+          />
         </div>
       )}
+
+      <AddBookingSheet
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        booking={selectedBooking}
+      />
     </div>
   );
 };

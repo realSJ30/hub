@@ -35,6 +35,7 @@ export type Booking = {
   customerId: string;
   customerName?: string;
   customerEmail?: string | null;
+  customerPhone?: string | null;
   unitName?: string;
   startDate: string | Date;
   endDate: string | Date;
@@ -216,7 +217,7 @@ export const columns: ColumnDef<Booking>[] = [
   {
     id: "actions",
     header: () => <div className="text-right">Actions</div>,
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const booking = row.original;
 
       return (
@@ -237,7 +238,9 @@ export const columns: ColumnDef<Booking>[] = [
               <DropdownMenuItem onClick={() => console.log("View", booking.id)}>
                 <Eye className="mr-2 h-4 w-4" /> View Details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => console.log("Edit", booking.id)}>
+              <DropdownMenuItem
+                onClick={() => (table.options.meta as any)?.onEdit?.(booking)}
+              >
                 <Edit className="mr-2 h-4 w-4" /> Edit Booking
               </DropdownMenuItem>
               <DropdownMenuSeparator />

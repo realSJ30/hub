@@ -20,21 +20,30 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
-import { Plus, Loader2, MapPin, User, Info, X, Tag } from "lucide-react";
+import {
+  Loader2,
+  MapPin,
+  User,
+  Info,
+  X,
+  Tag,
+  ArrowRight,
+  Calendar,
+} from "lucide-react";
 import {
   createBookingSchema,
   baseBookingSchema,
-  type CreateBookingInput,
 } from "@/lib/validations/booking.schema";
 import { createCustomerSchema } from "@/lib/validations/customer.schema";
 import {
   useCreateBooking,
+  useUpdateBooking,
   useUnits,
   useUpsertCustomer,
   useUnitAvailability,
 } from "@/hooks";
+import { type Booking } from "../columns";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { type DateRange } from "react-day-picker";
@@ -46,6 +55,10 @@ import {
   setHours,
   setMinutes,
 } from "date-fns";
+import {
+  BOOKING_STATUS_LABELS,
+  BOOKING_STATUS_STYLES,
+} from "@/utils/constants/booking";
 
 // Helper for overlap validation
 const checkOverlap = (
@@ -71,72 +84,58 @@ const checkOverlap = (
     : null;
 };
 
-export const AddBookingSheet = () => {
-  const [open, setOpen] = useState(false);
+interface AddBookingSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  booking?: Booking;
+}
+
+export const AddBookingSheet = ({
+  open,
+  onOpenChange,
+  booking,
+}: AddBookingSheetProps) => {
+  const isEdit = !!booking;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
-  const [startTimeSelected, setStartTimeSelected] = useState(false);
-  const [endTimeSelected, setEndTimeSelected] = useState(false);
+  const [startTimeSelected, setStartTimeSelected] = useState(isEdit);
+  const [endTimeSelected, setEndTimeSelected] = useState(isEdit);
 
-  const { mutate: createBooking, isPending: isBookingPending } =
+  const { mutate: createBooking, isPending: isCreatingBooking } =
     useCreateBooking();
+  const { mutate: updateBooking, isPending: isUpdatingBooking } =
+    useUpdateBooking();
   const { mutateAsync: upsertCustomer, isPending: isCustomerPending } =
     useUpsertCustomer();
   const { data: unitsResult } = useUnits();
 
-  const isPending = isBookingPending || isCustomerPending;
+  const isPending = isCreatingBooking || isUpdatingBooking || isCustomerPending;
   const units = Array.isArray(unitsResult?.data) ? unitsResult.data : [];
 
   const form = useForm({
     defaultValues: {
-      customerName: "",
-      customerPhone: "",
-      customerEmail: "",
-      unitId: "",
-      startDate: new Date() as Date | undefined,
-      endDate: addDays(new Date(), 1) as Date | undefined,
-      location: "",
-      pricePerDay: 0,
-      totalPrice: 0,
-      status: "PENDING" as any,
-      metadata: [] as string[], // Use array for form state
+      customerName: booking?.customerName || "",
+      customerPhone: booking?.customerPhone || "",
+      customerEmail: booking?.customerEmail || "",
+      unitId: booking?.unitId || "",
+      startDate: (booking ? new Date(booking.startDate) : new Date()) as
+        | Date
+        | undefined,
+      endDate: (booking
+        ? new Date(booking.endDate)
+        : addDays(new Date(), 1)) as Date | undefined,
+      location: booking?.location || "",
+      pricePerDay: booking?.pricePerDay || 0,
+      totalPrice: booking?.totalPrice || 0,
+      status: (booking?.status as any) || "PENDING",
+      metadata: booking?.metadata
+        ? booking.metadata.split(", ").filter(Boolean)
+        : [],
     },
     onSubmit: async ({ value }) => {
-      console.log(value.startDate, value.endDate);
       try {
         setErrorMessage(null);
 
-        const availabilityData = unitsResult?.data
-          ? Array.isArray(unitsResult.data)
-            ? unitsResult.data
-            : [] // In case we need to fetch fresh availability, but for now we might rely on client state or separate check.
-          : [];
-
-        // However, availabilityData is specific to a unit. We can't access `availabilityData` from useUnitAvailability hook here directly because prompts are blocked.
-        // We need to re-fetch or assume the user hasn't bypassed the client-side check.
-        // For simplicity in this client-side first approach, we'll assume the client check inside form.Subscribe works visually.
-        // BUT strict requirement says "The form's submit button still gets triggered. This should not happen."
-
-        // To do this robustly in onSubmit without top-level state:
-        // We can pass the `availabilityData` from the hook into the scope if we define it outside? No, hooks are inside component.
-        // We can trust the validationError if we had access to it, but we removed it from top level.
-
-        // BETTER: We can just let the onSubmit logic rely on a quick re-check if we have access to the data.
-        // Since we can't easily access `availabilityData` derived from the hook inside this callback without refs or state,
-        // and we removed the state to fix the infinite loop...
-
-        // ALTERNATIVE: Use a ref to store the current validation error state, updated during render.
-        // But that's hacky.
-
-        // Let's use `form.store` to get the latest unitId, then we need the availability.
-        // Actually, `useUnitAvailability` likely caches data.
-        // We can't call hooks inside onSubmit.
-
-        // Solution: Keep `availabilityData` at top level (it's fine, unitId changes rarely).
-        // Pass a `validateBooking` flag or ref?
-
-        // Simplest valid React pattern:
-        // Use a ref to track the current validity based on the last render's check.
         if (validationErrorRef.current) {
           throw new Error(validationErrorRef.current);
         }
@@ -196,15 +195,28 @@ export const AddBookingSheet = () => {
           throw new Error(errors || "Invalid booking details");
         }
 
-        createBooking(validatedBookingResult.data, {
-          onSuccess: () => {
-            setOpen(false);
-            form.reset();
-          },
-          onError: (error) => {
-            setErrorMessage(error.message || "Failed to create booking.");
-          },
-        });
+        if (isEdit && booking) {
+          updateBooking(
+            { id: booking.id, data: validatedBookingResult.data },
+            {
+              onSuccess: () => {
+                onOpenChange(false);
+              },
+              onError: (error: any) => {
+                setErrorMessage(error.message || "Failed to update booking.");
+              },
+            },
+          );
+        } else {
+          createBooking(validatedBookingResult.data, {
+            onSuccess: () => {
+              onOpenChange(false);
+            },
+            onError: (error: any) => {
+              setErrorMessage(error.message || "Failed to create booking.");
+            },
+          });
+        }
       } catch (error: any) {
         if (
           error.message !== "Selected range overlaps with an existing booking."
@@ -216,7 +228,17 @@ export const AddBookingSheet = () => {
     },
   });
 
-  // Get current unitId from form to fetch availability
+  // Reset form when booking or open state changes
+  React.useEffect(() => {
+    if (open) {
+      form.reset();
+      setStartTimeSelected(!!booking);
+      setEndTimeSelected(!!booking);
+      setErrorMessage(null);
+      setTagInput("");
+    }
+  }, [booking, open, form]);
+
   const selectedUnitId = useStore(form.store, (state) => state.values.unitId);
 
   const {
@@ -226,25 +248,18 @@ export const AddBookingSheet = () => {
   } = useUnitAvailability(selectedUnitId);
 
   const availabilityData = React.useMemo(() => {
-    return availabilityResult?.success ? availabilityResult.data : [];
-  }, [availabilityResult]);
+    const data =
+      availabilityResult?.success && availabilityResult.data
+        ? availabilityResult.data
+        : [];
+    if (isEdit && booking) {
+      return data.filter((b: any) => b.id !== booking.id);
+    }
+    return data;
+  }, [availabilityResult, isEdit, booking]);
 
   const validationErrorRef = React.useRef<string | null>(null);
 
-  // We calculate validation error inside form.Subscribe to avoid top-level re-renders
-  // but we need to signal to onSubmit to block.
-  // We'll update the ref inside the render prop or effect?
-  // Updating ref during render is okay if it doesn't trigger re-render.
-
-  // Actually, we can just keep availabilityData at top level (that wasn't the issue).
-  // The issue was `startDate` and `endDate` causing re-renders.
-
-  // So:
-  // 1. availabilityData is calculated at top level.
-  // 2. form.Subscribe calculates error during render.
-  // 3. We can update the ref there.
-
-  // Calculate total price based on unit and dates
   const calculateDerivedTotal = (price: number, start: Date, end: Date) => {
     const days = Math.max(differenceInDays(end, start), 1);
     return price * days;
@@ -254,7 +269,7 @@ export const AddBookingSheet = () => {
     if (e.key === "Enter") {
       e.preventDefault();
       const tag = tagInput.trim();
-      const currentTags = form.getFieldValue("metadata");
+      const currentTags = form.getFieldValue("metadata") as string[];
       if (tag && !currentTags.includes(tag)) {
         form.setFieldValue("metadata", [...currentTags, tag]);
       }
@@ -263,7 +278,7 @@ export const AddBookingSheet = () => {
   };
 
   const removeTag = (tagToRemove: string) => {
-    const currentTags = form.getFieldValue("metadata");
+    const currentTags = form.getFieldValue("metadata") as string[];
     form.setFieldValue(
       "metadata",
       currentTags.filter((t: string) => t !== tagToRemove),
@@ -271,22 +286,14 @@ export const AddBookingSheet = () => {
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          size="sm"
-          className="gap-2 h-9 rounded-sm bg-primary hover:bg-primary/90"
-        >
-          <Plus size={16} />
-          Add New Booking
-        </Button>
-      </SheetTrigger>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-[540px] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Add New Booking</SheetTitle>
+          <SheetTitle>{isEdit ? "Edit Booking" : "Add New Booking"}</SheetTitle>
           <SheetDescription>
-            Register a new rental booking. Start by entering customer details,
-            then select the unit and period.
+            {isEdit
+              ? "Update the rental booking details below."
+              : "Register a new rental booking. Start by entering customer details, then select the unit and period."}
           </SheetDescription>
         </SheetHeader>
 
@@ -313,13 +320,6 @@ export const AddBookingSheet = () => {
                   name="customerName"
                   validators={{
                     onChange: ({ value }) => {
-                      const result =
-                        createCustomerSchema.shape.fullName.safeParse(value);
-                      return result.success
-                        ? undefined
-                        : result.error.errors[0]?.message;
-                    },
-                    onBlur: ({ value }) => {
                       const result =
                         createCustomerSchema.shape.fullName.safeParse(value);
                       return result.success
@@ -366,13 +366,6 @@ export const AddBookingSheet = () => {
                     name="customerPhone"
                     validators={{
                       onChange: ({ value }) => {
-                        const result =
-                          createCustomerSchema.shape.phone.safeParse(value);
-                        return result.success
-                          ? undefined
-                          : result.error.errors[0]?.message;
-                      },
-                      onBlur: ({ value }) => {
                         const result =
                           createCustomerSchema.shape.phone.safeParse(value);
                         return result.success
@@ -457,18 +450,7 @@ export const AddBookingSheet = () => {
                 <Label htmlFor="unitId" className="text-xs font-semibold">
                   Select Unit
                 </Label>
-                <form.Field
-                  name="unitId"
-                  validators={{
-                    onChange: ({ value }) => {
-                      const result =
-                        baseBookingSchema.shape.unitId.safeParse(value);
-                      return result.success
-                        ? undefined
-                        : result.error.errors[0]?.message;
-                    },
-                  }}
-                >
+                <form.Field name="unitId">
                   {(field) => (
                     <div className="space-y-2">
                       <Select
@@ -478,10 +460,13 @@ export const AddBookingSheet = () => {
                           const selectedUnit = units.find((u) => u.id === val);
                           if (selectedUnit) {
                             const price = Number(selectedUnit.pricePerDay);
-                            field.handleChange(val);
                             form.setFieldValue("pricePerDay", price);
-                            const start = form.getFieldValue("startDate");
-                            const end = form.getFieldValue("endDate");
+                            const start = form.getFieldValue("startDate") as
+                              | Date
+                              | undefined;
+                            const end = form.getFieldValue("endDate") as
+                              | Date
+                              | undefined;
                             if (start && end) {
                               const total = calculateDerivedTotal(
                                 price,
@@ -505,11 +490,6 @@ export const AddBookingSheet = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      {field.state.meta.errors.length > 0 && (
-                        <p className="text-xs text-red-600 font-medium">
-                          {field.state.meta.errors[0]}
-                        </p>
-                      )}
                     </div>
                   )}
                 </form.Field>
@@ -530,67 +510,65 @@ export const AddBookingSheet = () => {
                       endDate as Date | undefined,
                       availabilityData || [],
                     );
-
-                    // Update ref for onSubmit check
                     validationErrorRef.current = validationError;
 
                     return (
-                      <div className="space-y-4">
-                        <BookingDateRangePicker
-                          startDate={startDate as Date | undefined}
-                          endDate={endDate as Date | undefined}
-                          pricePerDay={Number(pricePerDay)}
-                          startTimeSelected={startTimeSelected}
-                          endTimeSelected={endTimeSelected}
-                          availabilityData={availabilityData}
-                          isLoadingAvailability={isLoadingAvailability}
-                          onRefreshAvailability={refreshAvailability}
-                          disabled={!selectedUnitId}
-                          validationError={validationError}
-                          onStartTimeChange={(newDate) => {
-                            form.setFieldValue("startDate", newDate);
-                            setStartTimeSelected(true);
-                          }}
-                          onEndTimeChange={(newDate) => {
-                            form.setFieldValue("endDate", newDate);
-                            setEndTimeSelected(true);
-                          }}
-                          onRangeChange={(range: DateRange | undefined) => {
-                            const currentStart =
-                              form.getFieldValue("startDate");
-                            const currentEnd = form.getFieldValue("endDate");
+                      <BookingDateRangePicker
+                        startDate={startDate as Date | undefined}
+                        endDate={endDate as Date | undefined}
+                        pricePerDay={Number(pricePerDay)}
+                        startTimeSelected={startTimeSelected}
+                        endTimeSelected={endTimeSelected}
+                        availabilityData={availabilityData}
+                        isLoadingAvailability={isLoadingAvailability}
+                        onRefreshAvailability={refreshAvailability}
+                        disabled={!selectedUnitId}
+                        validationError={validationError}
+                        onStartTimeChange={(newDate) => {
+                          form.setFieldValue("startDate", newDate);
+                          setStartTimeSelected(true);
+                        }}
+                        onEndTimeChange={(newDate) => {
+                          form.setFieldValue("endDate", newDate);
+                          setEndTimeSelected(true);
+                        }}
+                        onRangeChange={(range: DateRange | undefined) => {
+                          const currentStart = form.getFieldValue(
+                            "startDate",
+                          ) as Date | undefined;
+                          const currentEnd = form.getFieldValue("endDate") as
+                            | Date
+                            | undefined;
 
-                            let newStart = range?.from;
-                            let newEnd = range?.to;
+                          let newStart = range?.from;
+                          let newEnd = range?.to;
 
-                            if (newStart && currentStart) {
-                              newStart = setHours(
-                                setMinutes(newStart, currentStart.getMinutes()),
-                                currentStart.getHours(),
-                              );
-                            }
+                          if (newStart && currentStart) {
+                            newStart = setHours(
+                              setMinutes(newStart, currentStart.getMinutes()),
+                              currentStart.getHours(),
+                            );
+                          }
+                          if (newEnd && currentEnd) {
+                            newEnd = setHours(
+                              setMinutes(newEnd, currentEnd.getMinutes()),
+                              currentEnd.getHours(),
+                            );
+                          }
 
-                            if (newEnd && currentEnd) {
-                              newEnd = setHours(
-                                setMinutes(newEnd, currentEnd.getMinutes()),
-                                currentEnd.getHours(),
-                              );
-                            }
+                          form.setFieldValue("startDate", newStart);
+                          form.setFieldValue("endDate", newEnd);
 
-                            form.setFieldValue("startDate", newStart);
-                            form.setFieldValue("endDate", newEnd);
-
-                            if (newStart && newEnd) {
-                              const total = calculateDerivedTotal(
-                                Number(pricePerDay),
-                                newStart,
-                                newEnd,
-                              );
-                              form.setFieldValue("totalPrice", total);
-                            }
-                          }}
-                        />
-                      </div>
+                          if (newStart && newEnd) {
+                            const total = calculateDerivedTotal(
+                              Number(pricePerDay),
+                              newStart,
+                              newEnd,
+                            );
+                            form.setFieldValue("totalPrice", total);
+                          }
+                        }}
+                      />
                     );
                   }}
                 </form.Subscribe>
@@ -614,8 +592,12 @@ export const AddBookingSheet = () => {
                         onChange={(e) => {
                           const val = Number(e.target.value);
                           field.handleChange(val);
-                          const start = form.getFieldValue("startDate");
-                          const end = form.getFieldValue("endDate");
+                          const start = form.getFieldValue("startDate") as
+                            | Date
+                            | undefined;
+                          const end = form.getFieldValue("endDate") as
+                            | Date
+                            | undefined;
                           if (start && end) {
                             const total = calculateDerivedTotal(
                               val,
@@ -634,15 +616,13 @@ export const AddBookingSheet = () => {
                     Total Price
                   </Label>
                   <form.Field name="totalPrice">
-                    {(field) => (
+                    {({ state, handleChange }) => (
                       <Input
                         id="totalPrice"
                         type="number"
                         className="h-10 rounded-sm"
-                        value={field.state.value}
-                        onChange={(e) =>
-                          field.handleChange(Number(e.target.value))
-                        }
+                        value={state.value}
+                        onChange={(e) => handleChange(Number(e.target.value))}
                       />
                     )}
                   </form.Field>
@@ -665,7 +645,6 @@ export const AddBookingSheet = () => {
                         placeholder="e.g. Manila, Philippines"
                         className="h-10 rounded-sm pl-10"
                         value={field.state.value || ""}
-                        onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                       />
                     </div>
@@ -707,7 +686,7 @@ export const AddBookingSheet = () => {
                   <form.Field name="metadata">
                     {(field) => (
                       <div className="flex flex-wrap gap-2">
-                        {field.state.value.map((tag) => (
+                        {(field.state.value as string[]).map((tag) => (
                           <Badge
                             key={tag}
                             variant="secondary"
@@ -724,11 +703,6 @@ export const AddBookingSheet = () => {
                             </button>
                           </Badge>
                         ))}
-                        {field.state.value.length === 0 && (
-                          <span className="text-[10px] text-neutral-400 italic">
-                            No tags added
-                          </span>
-                        )}
                       </div>
                     )}
                   </form.Field>
@@ -748,8 +722,10 @@ export const AddBookingSheet = () => {
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  {isEdit ? "Updating..." : "Creating..."}
                 </>
+              ) : isEdit ? (
+                "Save Changes"
               ) : (
                 "Confirm Booking"
               )}
@@ -757,7 +733,7 @@ export const AddBookingSheet = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
               disabled={isPending}
             >
               Cancel

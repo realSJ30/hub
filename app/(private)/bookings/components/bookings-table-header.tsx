@@ -1,10 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Download, Filter } from "lucide-react";
-import { AddBookingSheet } from "./add-booking-sheet";
+import { Plus, Download, Filter } from "lucide-react";
 
-export const BookingsTableHeader = () => {
+interface BookingsTableHeaderProps {
+  onAdd: () => void;
+}
+
+export const BookingsTableHeader = ({ onAdd }: BookingsTableHeaderProps) => {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
@@ -22,7 +25,14 @@ export const BookingsTableHeader = () => {
           <Download size={16} />
           Export
         </Button>
-        <AddBookingSheet />
+        <Button
+          size="sm"
+          className="gap-2 h-9 rounded-sm bg-primary hover:bg-primary/90"
+          onClick={onAdd}
+        >
+          <Plus size={16} />
+          Add New Booking
+        </Button>
       </div>
     </div>
   );

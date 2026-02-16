@@ -26,7 +26,7 @@ interface BookingDateRangePickerProps {
   endTimeSelected?: boolean;
   onStartTimeChange: (date: Date | undefined) => void;
   onEndTimeChange: (date: Date | undefined) => void;
-  availabilityData?: { startDate: string; endDate: string }[];
+  availabilityData?: { id: string; startDate: string; endDate: string }[];
   isLoadingAvailability?: boolean;
   onRefreshAvailability?: () => void;
   disabled?: boolean;
@@ -137,7 +137,12 @@ export function BookingDateRangePicker({
 
   return (
     <div className={cn("grid gap-2", className)}>
-      <div className={cn("rounded-md border overflow-hidden", validationError && "border-red-500")}>
+      <div
+        className={cn(
+          "rounded-md border overflow-hidden",
+          validationError && "border-red-500",
+        )}
+      >
         <button
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -184,9 +189,7 @@ export function BookingDateRangePicker({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {isLoadingAvailability && (
-              <Spinner />
-            )}
+            {isLoadingAvailability && <Spinner />}
             <ChevronDown
               className={cn(
                 "h-4 w-4 text-neutral-400 transition-transform duration-200",

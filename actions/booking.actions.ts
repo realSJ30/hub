@@ -86,6 +86,87 @@ export async function createBooking(data: CreateBookingInput) {
   }
 }
 
+export async function updateBooking(id: string, data: CreateBookingInput) {
+  try {
+    const validationResult = createBookingSchema.safeParse(data);
+
+    if (!validationResult.success) {
+      return {
+        success: false,
+        error: "Invalid input data",
+        details: validationResult.error.flatten().fieldErrors,
+      };
+    }
+
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: "Unauthorized",
+      };
+    }
+
+    // Check for overlapping bookings (excluding current booking)
+    const conflictingBooking = await prisma.booking.findFirst({
+      where: {
+        unitId: validationResult.data.unitId,
+        id: { not: id },
+        status: {
+          in: ["PENDING", "CONFIRMED", "IN_PROGRESS"],
+        },
+        AND: [
+          { startDate: { lt: validationResult.data.endDate } },
+          { endDate: { gt: validationResult.data.startDate } },
+        ],
+      },
+    });
+
+    if (conflictingBooking) {
+      return {
+        success: false,
+        error: "Booking Conflict",
+        details: {
+          startDate: ["The selected date range overlaps with an existing booking."],
+          endDate: ["The selected date range overlaps with an existing booking."],
+        },
+      };
+    }
+
+    // Update Booking
+    const booking = await prisma.booking.update({
+      where: { id },
+      data: {
+        unitId: validationResult.data.unitId,
+        customerId: validationResult.data.customerId,
+        startDate: validationResult.data.startDate,
+        endDate: validationResult.data.endDate,
+        pricePerDay: validationResult.data.pricePerDay,
+        totalPrice: validationResult.data.totalPrice,
+        location: validationResult.data.location || null,
+        status: validationResult.data.status as any,
+        metadata: validationResult.data.metadata || null,
+      },
+    });
+
+    revalidatePath("/bookings");
+    revalidatePath("/units");
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+      data: serializeBooking(booking),
+    };
+  } catch (error) {
+    console.error("Error updating booking:", error);
+    return {
+      success: false,
+      error: "Failed to update booking. Please try again.",
+    };
+  }
+}
+
 export async function getBookings() {
   try {
     const bookings = await prisma.booking.findMany({
@@ -104,6 +185,7 @@ export async function getBookings() {
         ...serializeBooking(b),
         customerName: b.customer.fullName,
         customerEmail: b.customer.email,
+        customerPhone: b.customer.phone,
         unitName: b.unit.name,
       })),
     };
@@ -133,6 +215,7 @@ export async function getUnitAvailability(unitId: string) {
         },
       },
       select: {
+        id: true,
         startDate: true,
         endDate: true,
       },
@@ -141,6 +224,7 @@ export async function getUnitAvailability(unitId: string) {
     return {
       success: true,
       data: bookings.map(b => ({
+        id: b.id,
         startDate: b.startDate.toISOString(),
         endDate: b.endDate.toISOString(),
       })),
