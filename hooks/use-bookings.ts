@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createBooking,
   getBookings,
+  getBookingsByUnit,
   getBooking,
   updateBooking,
   deleteBooking,
@@ -18,6 +19,20 @@ export function useBookings() {
       }
       return result;
     },
+  });
+}
+
+export function useBookingsByUnit(unitId: string) {
+  return useQuery({
+    queryKey: ["bookings", { unitId }],
+    queryFn: async () => {
+      const result = await getBookingsByUnit(unitId);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch unit bookings");
+      }
+      return result;
+    },
+    enabled: !!unitId,
   });
 }
 

@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/navigation";
 import { EditUnitSheet } from "./edit-unit-sheet";
 import { DeleteUnitDialog } from "./delete-unit-dialog";
 import type { Unit } from "../columns";
@@ -22,6 +23,7 @@ interface UnitActionsProps {
 export const UnitActions = ({ unit }: UnitActionsProps) => {
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const router = useRouter();
 
   return (
     <div className="flex justify-end">
@@ -40,7 +42,7 @@ export const UnitActions = ({ unit }: UnitActionsProps) => {
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => console.log("View", unit.id)}
+            onClick={() => router.push(`/units/${unit.id}`)}
             className="cursor-pointer"
           >
             <Eye className="mr-2 h-4 w-4" />

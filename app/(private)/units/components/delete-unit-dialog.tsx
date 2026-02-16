@@ -8,12 +8,14 @@ interface DeleteUnitDialogProps {
   unit: Unit | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 export const DeleteUnitDialog = ({
   unit,
   open,
   onOpenChange,
+  onSuccess,
 }: DeleteUnitDialogProps) => {
   const { mutate: deleteUnit, isPending } = useDeleteUnit();
 
@@ -23,6 +25,7 @@ export const DeleteUnitDialog = ({
     deleteUnit(unit.id, {
       onSuccess: () => {
         onOpenChange(false);
+        onSuccess?.();
       },
     });
   };

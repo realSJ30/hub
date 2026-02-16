@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getUnits } from "@/actions/unit.actions";
+import { getUnits, getUnit } from "@/actions/unit.actions";
 import type { UnitFilters } from "@/lib/validations/unit.schema";
 
 /**
@@ -19,6 +19,26 @@ export function useUnits(filters?: UnitFilters) {
     },
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: true,
+  });
+}
+
+/**
+ * Custom hook for fetching a single unit
+ */
+export function useUnit(id: string) {
+  return useQuery({
+    queryKey: ["unit", id],
+    queryFn: async () => {
+      const result = await getUnit(id);
+      
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch unit");
+      }
+      
+      return result;
+    },
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
   });
 }
 

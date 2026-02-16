@@ -202,6 +202,7 @@ export async function updateUnit(id: string, data: CreateUnitInput) {
 
     // Revalidate paths
     revalidatePath("/units");
+    revalidatePath(`/units/${id}`);
     revalidatePath("/dashboard");
 
     return {
@@ -261,6 +262,29 @@ export async function deleteUnit(id: string) {
     return {
       success: false,
       error: "Failed to delete unit.",
+    };
+  }
+}
+
+export async function getUnit(id: string) {
+  try {
+    const unit = await prisma.unit.findUnique({
+      where: { id },
+    });
+
+    if (!unit) {
+      return { success: false, error: "Unit not found" };
+    }
+
+    return {
+      success: true,
+      data: serializeUnit(unit),
+    };
+  } catch (error) {
+    console.error("Error fetching unit:", error);
+    return {
+      success: false,
+      error: "Failed to fetch unit details.",
     };
   }
 }

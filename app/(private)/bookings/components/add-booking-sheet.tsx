@@ -84,16 +84,23 @@ const checkOverlap = (
     : null;
 };
 
+const calculateDerivedTotal = (price: number, start: Date, end: Date) => {
+  const days = Math.max(differenceInDays(end, start), 1);
+  return price * days;
+};
+
 interface AddBookingSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   booking?: Booking;
+  defaultUnitId?: string;
 }
 
 export const AddBookingSheet = ({
   open,
   onOpenChange,
   booking,
+  defaultUnitId,
 }: AddBookingSheetProps) => {
   const isEdit = !!booking;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -112,21 +119,30 @@ export const AddBookingSheet = ({
   const isPending = isCreatingBooking || isUpdatingBooking || isCustomerPending;
   const units = Array.isArray(unitsResult?.data) ? unitsResult.data : [];
 
+  // Determine initial derived values
+  const initialUnitId = booking?.unitId || defaultUnitId || "";
+  const initialUnit = units.find((u) => u.id === initialUnitId);
+  const initialPrice =
+    booking?.pricePerDay || (initialUnit ? Number(initialUnit.pricePerDay) : 0);
+  const initialStart = booking ? new Date(booking.startDate) : new Date();
+  const initialEnd = booking
+    ? new Date(booking.endDate)
+    : addDays(new Date(), 1);
+  const initialTotal =
+    booking?.totalPrice ||
+    calculateDerivedTotal(initialPrice, initialStart, initialEnd);
+
   const form = useForm({
     defaultValues: {
       customerName: booking?.customerName || "",
       customerPhone: booking?.customerPhone || "",
       customerEmail: booking?.customerEmail || "",
-      unitId: booking?.unitId || "",
-      startDate: (booking ? new Date(booking.startDate) : new Date()) as
-        | Date
-        | undefined,
-      endDate: (booking
-        ? new Date(booking.endDate)
-        : addDays(new Date(), 1)) as Date | undefined,
+      unitId: initialUnitId,
+      startDate: initialStart as Date | undefined,
+      endDate: initialEnd as Date | undefined,
       location: booking?.location || "",
-      pricePerDay: booking?.pricePerDay || 0,
-      totalPrice: booking?.totalPrice || 0,
+      pricePerDay: initialPrice,
+      totalPrice: initialTotal,
       status: (booking?.status as any) || "PENDING",
       metadata: booking?.metadata
         ? booking.metadata.split(", ").filter(Boolean)
@@ -259,11 +275,6 @@ export const AddBookingSheet = ({
   }, [availabilityResult, isEdit, booking]);
 
   const validationErrorRef = React.useRef<string | null>(null);
-
-  const calculateDerivedTotal = (price: number, start: Date, end: Date) => {
-    const days = Math.max(differenceInDays(end, start), 1);
-    return price * days;
-  };
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {

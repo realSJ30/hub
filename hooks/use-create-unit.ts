@@ -39,8 +39,9 @@ export function useUpdateUnit() {
       }
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["units"] });
+      queryClient.invalidateQueries({ queryKey: ["unit", variables.id] });
     },
     onError: (error) => {
       console.error("Error in useUpdateUnit:", error);

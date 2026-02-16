@@ -198,6 +198,40 @@ export async function getBookings() {
   }
 }
 
+export async function getBookingsByUnit(unitId: string) {
+  try {
+    const bookings = await prisma.booking.findMany({
+      where: {
+        unitId,
+      },
+      include: {
+        customer: true,
+        unit: true,
+      },
+      orderBy: {
+        startDate: "desc",
+      },
+    });
+
+    return {
+      success: true,
+      data: bookings.map(b => ({
+        ...serializeBooking(b),
+        customerName: b.customer.fullName,
+        customerEmail: b.customer.email,
+        customerPhone: b.customer.phone,
+        unitName: b.unit.name,
+      })),
+    };
+  } catch (error) {
+    console.error("Error fetching unit bookings:", error);
+    return {
+      success: false,
+      error: "Failed to fetch booking history for this unit.",
+    };
+  }
+}
+
 export async function getUnitAvailability(unitId: string) {
   try {
     if (!unitId) {
