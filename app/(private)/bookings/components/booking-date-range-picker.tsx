@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { BookingTimePicker } from "./booking-time-picker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
 
 interface BookingDateRangePickerProps {
   startDate: Date | undefined;
@@ -184,7 +185,7 @@ export function BookingDateRangePicker({
           </div>
           <div className="flex items-center gap-2">
             {isLoadingAvailability && (
-              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+              <Spinner />
             )}
             <ChevronDown
               className={cn(
