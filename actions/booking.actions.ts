@@ -238,6 +238,40 @@ export async function getUnitAvailability(unitId: string) {
   }
 }
 
+export async function getBooking(id: string) {
+  try {
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+      include: {
+        customer: true,
+        unit: true,
+      },
+    });
+
+    if (!booking) {
+      return { success: false, error: "Booking not found" };
+    }
+
+    return {
+      success: true,
+      data: {
+        ...serializeBooking(booking),
+        customerName: booking.customer.fullName,
+        customerEmail: booking.customer.email,
+        customerPhone: booking.customer.phone,
+        unitName: booking.unit.name,
+        unitBrand: booking.unit.brand,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching booking:", error);
+    return {
+      success: false,
+      error: "Failed to fetch booking details.",
+    };
+  }
+}
+
 export async function deleteBooking(id: string) {
   try {
     const booking = await prisma.booking.delete({

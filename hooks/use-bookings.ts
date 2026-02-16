@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createBooking,
   getBookings,
+  getBooking,
   updateBooking,
   deleteBooking,
 } from "@/actions/booking.actions";
@@ -17,6 +18,20 @@ export function useBookings() {
       }
       return result;
     },
+  });
+}
+
+export function useBooking(id: string) {
+  return useQuery({
+    queryKey: ["booking", id],
+    queryFn: async () => {
+      const result = await getBooking(id);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch booking");
+      }
+      return result;
+    },
+    enabled: !!id,
   });
 }
 
@@ -48,8 +63,9 @@ export function useUpdateBooking() {
       }
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["booking", variables.id] });
     },
   });
 }
@@ -65,8 +81,9 @@ export function useDeleteBooking() {
       }
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["booking", id] });
     },
   });
 }

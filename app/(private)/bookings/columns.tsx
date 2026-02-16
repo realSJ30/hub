@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import {
   MapPin,
@@ -24,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 import {
   BOOKING_STATUS_LABELS,
   BOOKING_STATUS_STYLES,
@@ -37,6 +37,7 @@ export type Booking = {
   customerEmail?: string | null;
   customerPhone?: string | null;
   unitName?: string;
+  unitBrand?: string;
   startDate: string | Date;
   endDate: string | Date;
   pricePerDay: number;
@@ -219,6 +220,7 @@ export const columns: ColumnDef<Booking>[] = [
     header: () => <div className="text-right">Actions</div>,
     cell: ({ row, table }) => {
       const booking = row.original;
+      const router = useRouter();
 
       return (
         <div className="flex justify-end">
@@ -235,7 +237,9 @@ export const columns: ColumnDef<Booking>[] = [
             <DropdownMenuContent align="end" className="w-[160px]">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => console.log("View", booking.id)}>
+              <DropdownMenuItem
+                onClick={() => router.push(`/bookings/${booking.id}`)}
+              >
                 <Eye className="mr-2 h-4 w-4" /> View Details
               </DropdownMenuItem>
               <DropdownMenuItem

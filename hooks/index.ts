@@ -9,6 +9,6 @@
 
 export { useCreateUnit, useUpdateUnit, useDeleteUnit } from "./use-create-unit";
 export { useUnits } from "./use-units";
-export { useBookings, useCreateBooking, useUpdateBooking, useDeleteBooking } from "./use-bookings";
+export { useBookings, useBooking, useCreateBooking, useUpdateBooking, useDeleteBooking } from "./use-bookings";
 export { useCustomers, useUpsertCustomer } from "./use-customers";
 export { useUnitAvailability } from "./use-unit-availability";

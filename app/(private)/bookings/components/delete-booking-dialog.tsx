@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { DeleteConfirmationDialog } from "@/components/custom/delete-confirmation-dialog";
 import { useDeleteBooking } from "@/hooks";
 import type { Booking } from "../columns";
@@ -9,12 +8,14 @@ interface DeleteBookingDialogProps {
   booking: Booking | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 export const DeleteBookingDialog = ({
   booking,
   open,
   onOpenChange,
+  onSuccess,
 }: DeleteBookingDialogProps) => {
   const { mutate: deleteBooking, isPending } = useDeleteBooking();
 
@@ -24,6 +25,7 @@ export const DeleteBookingDialog = ({
     deleteBooking(booking.id, {
       onSuccess: () => {
         onOpenChange(false);
+        onSuccess?.();
       },
     });
   };
