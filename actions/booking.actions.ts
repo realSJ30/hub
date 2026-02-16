@@ -28,6 +28,31 @@ export async function createBooking(data: CreateBookingInput) {
       };
     }
 
+    // Check for overlapping bookings
+    const conflictingBooking = await prisma.booking.findFirst({
+      where: {
+        unitId: validationResult.data.unitId,
+        status: {
+          in: ["PENDING", "CONFIRMED", "IN_PROGRESS"],
+        },
+        AND: [
+          { startDate: { lt: validationResult.data.endDate } },
+          { endDate: { gt: validationResult.data.startDate } },
+        ],
+      },
+    });
+
+    if (conflictingBooking) {
+      return {
+        success: false,
+        error: "Booking Conflict",
+        details: {
+          startDate: ["The selected date range overlaps with an existing booking."],
+          endDate: ["The selected date range overlaps with an existing booking."],
+        },
+      };
+    }
+
     // Create Booking
     const booking = await prisma.booking.create({
       data: {
