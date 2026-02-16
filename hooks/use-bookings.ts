@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createBooking, getBookings, updateBooking } from "@/actions/booking.actions";
+import {
+  createBooking,
+  getBookings,
+  updateBooking,
+  deleteBooking,
+} from "@/actions/booking.actions";
 import type { CreateBookingInput } from "@/lib/validations/booking.schema";
 
 export function useBookings() {
@@ -40,6 +45,23 @@ export function useUpdateBooking() {
       const result = await updateBooking(id, data);
       if (!result.success) {
         throw new Error(result.error || "Failed to update booking");
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}
+
+export function useDeleteBooking() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await deleteBooking(id);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to delete booking");
       }
       return result;
     },

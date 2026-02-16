@@ -237,3 +237,26 @@ export async function getUnitAvailability(unitId: string) {
     };
   }
 }
+
+export async function deleteBooking(id: string) {
+  try {
+    const booking = await prisma.booking.delete({
+      where: { id },
+    });
+
+    revalidatePath("/bookings");
+    revalidatePath("/units");
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+      data: serializeBooking(booking),
+    };
+  } catch (error) {
+    console.error("Error deleting booking:", error);
+    return {
+      success: false,
+      error: "Failed to delete booking. Please try again.",
+    };
+  }
+}

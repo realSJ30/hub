@@ -246,7 +246,7 @@ export const columns: ColumnDef<Booking>[] = [
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-red-600 focus:text-red-600"
-                onClick={() => console.log("Delete", booking.id)}
+                onClick={() => (table.options.meta as any)?.onDelete?.(booking)}
               >
                 <Trash2 className="mr-2 h-4 w-4" /> Delete
               </DropdownMenuItem>
