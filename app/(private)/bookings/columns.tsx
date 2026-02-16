@@ -35,6 +35,7 @@ export type Booking = {
   customerId: string;
   customerName?: string;
   customerEmail?: string | null;
+  unitName?: string;
   startDate: string | Date;
   endDate: string | Date;
   pricePerDay: number;
@@ -49,22 +50,22 @@ export type Booking = {
 
 export const columns: ColumnDef<Booking>[] = [
   {
-    accessorKey: "id",
-    header: "ID",
+    accessorKey: "unitName",
+    header: "Unit",
     cell: ({ row }) => {
-      const id = row.getValue("id") as string;
+      const unitName = row.getValue("unitName") as string;
       const location = row.original.location;
 
       return (
         <div className="flex flex-col gap-1">
-          <span className="font-mono text-[10px] font-bold text-neutral-400">
-            {id.split("_")[1]?.toUpperCase() || id.slice(0, 8).toUpperCase()}
+          <span className="text-sm font-semibold text-neutral-900">
+            {unitName || "Unknown Unit"}
           </span>
           {location && (
             <div className="flex items-center gap-1 text-neutral-500">
               <MapPin size={10} className="text-neutral-400" />
-              <span className="text-[10px] whitespace-nowrap overflow-hidden text-ellipsis max-w-[100px]">
-                {location}
+              <span className="text-[10px] whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
+                {location || "N/A"}
               </span>
             </div>
           )}
