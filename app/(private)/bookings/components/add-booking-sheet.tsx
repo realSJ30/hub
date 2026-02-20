@@ -678,6 +678,9 @@ export const AddBookingSheet = ({
                         <SelectItem value="PENDING">Pending</SelectItem>
                         <SelectItem value="CONFIRMED">Confirmed</SelectItem>
                         <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                        <SelectItem value="COMPLETED">Completed</SelectItem>
+                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                        <SelectItem value="NO_SHOW">No Show</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
