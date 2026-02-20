@@ -328,3 +328,28 @@ export async function deleteBooking(id: string) {
     };
   }
 }
+
+export async function updateBookingStatus(id: string, status: string) {
+  try {
+    const booking = await prisma.booking.update({
+      where: { id },
+      data: { status: status as any },
+    });
+
+    revalidatePath("/bookings");
+    revalidatePath(`/bookings/${id}`);
+    revalidatePath("/units");
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+      data: serializeBooking(booking),
+    };
+  } catch (error) {
+    console.error("Error updating booking status:", error);
+    return {
+      success: false,
+      error: "Failed to update booking status.",
+    };
+  }
+}

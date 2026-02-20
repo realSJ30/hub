@@ -6,6 +6,7 @@ import {
   getBooking,
   updateBooking,
   deleteBooking,
+  updateBookingStatus,
 } from "@/actions/booking.actions";
 import type { CreateBookingInput } from "@/lib/validations/booking.schema";
 
@@ -99,6 +100,24 @@ export function useDeleteBooking() {
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       queryClient.invalidateQueries({ queryKey: ["booking", id] });
+    },
+  });
+}
+
+export function useUpdateBookingStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const result = await updateBookingStatus(id, status);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to update booking status");
+      }
+      return result;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["booking", variables.id] });
     },
   });
 }

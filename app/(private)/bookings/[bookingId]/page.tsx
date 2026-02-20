@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useBooking } from "@/hooks";
+import { useBooking, useUpdateBookingStatus } from "@/hooks";
 import {
   Loader2,
   ChevronLeft,
@@ -15,6 +15,7 @@ import {
   Car,
   Info,
   ArrowRight,
+  CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,8 @@ export default function BookingDetailsPage() {
 
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { mutate: updateStatus, isPending: isUpdatingStatus } =
+    useUpdateBookingStatus();
 
   if (isLoading) {
     return (
@@ -82,7 +85,22 @@ export default function BookingDetailsPage() {
 
   const startDate = new Date(booking.startDate);
   const endDate = new Date(booking.endDate);
+  const now = new Date();
+
+  // Progress calculation
+  let progress = 0;
+  if (now > startDate) {
+    if (now > endDate) {
+      progress = 100;
+    } else {
+      const total = endDate.getTime() - startDate.getTime();
+      const elapsed = now.getTime() - startDate.getTime();
+      progress = (elapsed / total) * 100;
+    }
+  }
+
   const duration = Math.max(differenceInDays(endDate, startDate), 1);
+  const isCompleted = booking.status === "COMPLETED";
   const statusLabel = BOOKING_STATUS_LABELS[booking.status] || booking.status;
   const statusStyles =
     BOOKING_STATUS_STYLES[booking.status] || "bg-neutral-100 text-neutral-700";
@@ -118,20 +136,24 @@ export default function BookingDetailsPage() {
 
         <div className="flex items-center gap-3">
           <Button
+            className="gap-2 h-10 rounded-sm bg-primary hover:bg-primary/80 text-white font-bold"
+            disabled={isCompleted || isUpdatingStatus}
+            onClick={() => updateStatus({ id: bookingId, status: "COMPLETED" })}
+          >
+            {isUpdatingStatus ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <CheckCircle size={16} />
+            )}
+            {isCompleted ? "Completed" : "Mark as Completed"}
+          </Button>
+          <Button
             variant="outline"
             className="gap-2 h-10 rounded-sm border-neutral-200"
             onClick={() => setIsEditSheetOpen(true)}
           >
             <Edit size={16} />
             Edit Booking
-          </Button>
-          <Button
-            variant="destructive"
-            className="gap-2 h-10 rounded-sm"
-            onClick={() => setIsDeleteDialogOpen(true)}
-          >
-            <Trash2 size={16} />
-            Delete
           </Button>
         </div>
       </div>
@@ -180,7 +202,7 @@ export default function BookingDetailsPage() {
 
                 <div className="flex flex-col items-center md:items-end text-center md:text-right gap-2 w-full">
                   <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
-                    Drop Off
+                    Return
                   </span>
                   <div className="bg-neutral-50 p-3 rounded-sm mb-2">
                     <Calendar size={24} className="text-neutral-900" />
@@ -194,6 +216,33 @@ export default function BookingDetailsPage() {
                       {format(endDate, "hh:mm a")}
                     </span>
                   </div>
+                </div>
+              </div>
+
+              {/* Progress Indicator */}
+              <div className="mt-8 pt-8 border-t border-neutral-100">
+                <div className="flex justify-between items-end mb-2">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                      Booking Progress
+                    </span>
+                    <span className="text-sm font-bold text-neutral-900">
+                      {progress === 100
+                        ? "Rental Period Ended"
+                        : progress === 0
+                          ? "Waiting to Start"
+                          : "Rental in Progress"}
+                    </span>
+                  </div>
+                  <span className="text-xs font-black text-neutral-900">
+                    {Math.round(progress)}%
+                  </span>
+                </div>
+                <div className="w-full bg-neutral-100 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-emerald-500 h-full transition-all duration-500 ease-in-out"
+                    style={{ width: `${progress}%` }}
+                  />
                 </div>
               </div>
 
@@ -350,6 +399,38 @@ export default function BookingDetailsPage() {
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="mt-12 pt-12 border-t border-neutral-200">
+        <div className="bg-white border border-red-100 rounded-sm overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-red-50 bg-red-50 flex items-center gap-2">
+            <Trash2 size={18} className="text-red-600" />
+            <h2 className="font-bold text-sm uppercase tracking-wider text-red-900">
+              Danger Zone
+            </h2>
+          </div>
+          <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h3 className="text-base font-bold text-neutral-900 mb-1">
+                Delete this booking
+              </h3>
+              <p className="text-sm text-neutral-500 max-w-xl">
+                Once you delete a booking, there is no going back. Please be
+                certain. This action will permanently remove the booking and all
+                associated customer data for this specific reservation.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              className="gap-2 h-11 px-6 rounded-sm font-bold uppercase text-xs tracking-wider shrink-0"
+              onClick={() => setIsDeleteDialogOpen(true)}
+            >
+              <Trash2 size={16} />
+              Delete Booking
+            </Button>
+          </div>
         </div>
       </div>
 
