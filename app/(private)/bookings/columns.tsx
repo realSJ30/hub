@@ -10,6 +10,7 @@ import {
   Edit,
   Trash2,
   ArrowRight,
+  CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -247,6 +248,19 @@ export const columns: ColumnDef<Booking>[] = [
               >
                 <Edit className="mr-2 h-4 w-4" /> Edit Booking
               </DropdownMenuItem>
+              {booking.status !== "COMPLETED" && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    (table.options.meta as any)?.onStatusUpdate?.(
+                      booking.id,
+                      "COMPLETED",
+                    )
+                  }
+                >
+                  <CheckCircle className="mr-2 h-4 w-4 text-emerald-600" />
+                  Completed
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-red-600 focus:text-red-600"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useUnit, useBookingsByUnit } from "@/hooks";
+import { useUnit, useBookingsByUnit, useUpdateBookingStatus } from "@/hooks";
 import {
   Loader2,
   ChevronLeft,
@@ -14,7 +14,15 @@ import {
   Edit2,
   Trash2,
   Plus,
+  CheckCircle,
+  MoreVertical,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UnitStatusBadge } from "../components/unit-status-badge";
@@ -47,6 +55,7 @@ export default function UnitDetailsPage() {
   } = useUnit(unitId);
   const { data: bookingsResult, isLoading: bookingsLoading } =
     useBookingsByUnit(unitId);
+  const { mutate: updateStatus } = useUpdateBookingStatus();
 
   const unit = unitResult?.data;
   const bookings = bookingsResult?.data || [];
@@ -332,15 +341,55 @@ export default function UnitDetailsPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <Link href={`/bookings/${booking.id}`}>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-[9px] font-black uppercase tracking-widest border border-transparent hover:border-neutral-200 rounded-sm"
-                              >
-                                View
-                              </Button>
-                            </Link>
+                            <div className="flex justify-end items-center gap-2">
+                              <Link href={`/bookings/${booking.id}`}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 text-[10px] font-bold uppercase tracking-wider border border-neutral-100 hover:bg-neutral-50 rounded-sm"
+                                >
+                                  View
+                                </Button>
+                              </Link>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-neutral-400 hover:text-neutral-900"
+                                  >
+                                    <MoreVertical size={14} />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-40"
+                                >
+                                  {booking.status !== "COMPLETED" && (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        updateStatus({
+                                          id: booking.id,
+                                          status: "COMPLETED",
+                                        })
+                                      }
+                                      className="text-emerald-600 focus:text-emerald-600 font-medium"
+                                    >
+                                      <CheckCircle size={14} className="mr-2" />
+                                      Mark Completed
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      router.push(`/bookings/${booking.id}`)
+                                    }
+                                  >
+                                    <Info size={14} className="mr-2" />
+                                    Details
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </td>
                         </tr>
                       );

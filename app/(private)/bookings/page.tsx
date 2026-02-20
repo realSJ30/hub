@@ -8,7 +8,7 @@ import {
   CUSTOMERS_MOCK_DATA,
 } from "@/utils/constants/mock";
 
-import { useBookings } from "@/hooks";
+import { useBookings, useUpdateBookingStatus } from "@/hooks";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AddBookingSheet } from "./components/add-booking-sheet";
@@ -18,6 +18,7 @@ import { type Booking } from "./columns";
 
 const BookingsPage = () => {
   const { data: bookingsResult, isLoading, isError, error } = useBookings();
+  const { mutate: updateStatus } = useUpdateBookingStatus();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | undefined>(
@@ -38,6 +39,10 @@ const BookingsPage = () => {
   const handleDelete = (booking: Booking) => {
     setBookingToDelete(booking);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleStatusUpdate = (id: string, status: string) => {
+    updateStatus({ id, status });
   };
 
   return (
@@ -81,6 +86,7 @@ const BookingsPage = () => {
             data={bookingsResult?.data || []}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onStatusUpdate={handleStatusUpdate}
           />
         </div>
       )}
