@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "@tanstack/react-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,6 +90,19 @@ export const RecordPaymentSheet = ({
     },
   });
 
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        amount: remaining > 0 ? remaining : 0,
+        method: "cash",
+        referenceNumber: "",
+        paidDate: new Date().toISOString().split("T")[0],
+        notes: "",
+      });
+      setErrorMessage(null);
+    }
+  }, [open, remaining, form]);
+
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat("en-PH", {
       style: "currency",
@@ -135,12 +148,27 @@ export const RecordPaymentSheet = ({
               Remaining Balance
             </span>
             <span
-              className={`font-black ${remaining <= 0 ? "text-emerald-600" : "text-amber-600"}`}
+              className={`font-black ${remaining <= 0 ? (remaining < 0 ? "text-amber-600" : "text-emerald-600") : "text-amber-600"}`}
             >
-              {formatCurrency(Math.max(remaining, 0))}
+              {formatCurrency(Math.abs(remaining))}{" "}
+              {remaining < 0 && "(Overpaid)"}
             </span>
           </div>
         </div>
+
+        {remaining < 0 && (
+          <div className="mx-6 mt-2 mb-2 p-3 bg-amber-50 border border-amber-100 rounded-sm flex items-start gap-2">
+            <AlertCircle size={14} className="text-amber-600 mt-0.5 shrink-0" />
+            <div className="text-xs text-amber-800 font-medium leading-tight">
+              This booking is currently overpaid. The total amount collected
+              exceeds the total booking cost by{" "}
+              <span className="font-bold">
+                {formatCurrency(Math.abs(remaining))}
+              </span>
+              .
+            </div>
+          </div>
+        )}
 
         <form
           onSubmit={(e) => {

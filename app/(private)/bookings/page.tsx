@@ -115,7 +115,7 @@ const BookingsPage = () => {
         onOpenChange={setIsPaymentSheetOpen}
         bookingId={bookingForPayment?.id || ""}
         bookingTotal={bookingForPayment?.totalPrice || 0}
-        totalPaid={0}
+        totalPaid={bookingForPayment?.totalPaid || 0}
       />
     </div>
   );
