@@ -5,7 +5,6 @@ import {
   Loader2,
   CreditCard,
   Banknote,
-  Building2,
   Smartphone,
   TrendingUp,
   Calendar,
@@ -18,19 +17,16 @@ import { cn } from "@/lib/utils";
 
 const METHOD_LABELS: Record<string, string> = {
   cash: "Cash",
-  bank_transfer: "Bank Transfer",
   online_banking: "Online Banking",
 };
 
 const METHOD_ICONS: Record<string, React.ReactNode> = {
   cash: <Banknote size={16} />,
-  bank_transfer: <Building2 size={16} />,
   online_banking: <Smartphone size={16} />,
 };
 
 const METHOD_BADGE_STYLES: Record<string, string> = {
   cash: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  bank_transfer: "bg-blue-50 text-blue-700 border-blue-200",
   online_banking: "bg-purple-50 text-purple-700 border-purple-200",
 };
 

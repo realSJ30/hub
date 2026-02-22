@@ -137,7 +137,7 @@ Handles payment records associated with bookings. Supports multiple (partial) pa
 - `id`: Unique identifier (UUID).
 - `booking_id`: Foreign Key referencing `BOOKINGS`.
 - `amount`: Payment amount (supports partial payments).
-- `method`: Payment method (`cash`, `bank_transfer`, `online_banking`).
+- `method`: Payment method (`cash`, `online_banking`).
 - `reference_number`: Optional reference/transaction number.
 - `paid_date`: Date the payment was made.
 - `notes`: Optional admin notes.

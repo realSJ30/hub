@@ -22,7 +22,6 @@ import {
   CheckCircle,
   CreditCard,
   Banknote,
-  Building2,
   Smartphone,
   Plus,
 } from "lucide-react";
@@ -42,13 +41,11 @@ import { type Booking } from "../columns";
 
 const METHOD_LABELS: Record<string, string> = {
   cash: "Cash",
-  bank_transfer: "Bank Transfer",
   online_banking: "Online Banking",
 };
 
 const METHOD_ICONS: Record<string, React.ReactNode> = {
   cash: <Banknote size={14} />,
-  bank_transfer: <Building2 size={14} />,
   online_banking: <Smartphone size={14} />,
 };
 

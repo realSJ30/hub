@@ -51,7 +51,7 @@ export const RecordPaymentSheet = ({
   const form = useForm({
     defaultValues: {
       amount: remaining > 0 ? remaining : 0,
-      method: "cash" as "cash" | "bank_transfer" | "online_banking",
+      method: "cash" as "cash" | "online_banking",
       referenceNumber: "",
       paidDate: new Date().toISOString().split("T")[0],
       notes: "",

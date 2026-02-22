@@ -173,6 +173,7 @@ export async function getBookings() {
       include: {
         customer: true,
         unit: true,
+        payments: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -187,6 +188,7 @@ export async function getBookings() {
         customerEmail: b.customer.email,
         customerPhone: b.customer.phone,
         unitName: b.unit.name,
+        totalPaid: b.payments.reduce((sum, p) => sum + Number(p.amount), 0),
       })),
     };
   } catch (error) {
@@ -207,6 +209,7 @@ export async function getBookingsByUnit(unitId: string) {
       include: {
         customer: true,
         unit: true,
+        payments: true,
       },
       orderBy: {
         startDate: "desc",
@@ -221,6 +224,7 @@ export async function getBookingsByUnit(unitId: string) {
         customerEmail: b.customer.email,
         customerPhone: b.customer.phone,
         unitName: b.unit.name,
+        totalPaid: b.payments.reduce((sum, p) => sum + Number(p.amount), 0),
       })),
     };
   } catch (error) {
@@ -279,6 +283,7 @@ export async function getBooking(id: string) {
       include: {
         customer: true,
         unit: true,
+        payments: true,
       },
     });
 
@@ -295,6 +300,7 @@ export async function getBooking(id: string) {
         customerPhone: booking.customer.phone,
         unitName: booking.unit.name,
         unitBrand: booking.unit.brand,
+        totalPaid: booking.payments.reduce((sum: number, p: any) => sum + Number(p.amount), 0),
       },
     };
   } catch (error) {

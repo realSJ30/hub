@@ -2,11 +2,10 @@ import { z } from "zod";
 
 export const PAYMENT_METHODS = [
   { value: "cash", label: "Cash" },
-  { value: "bank_transfer", label: "Bank Transfer" },
   { value: "online_banking", label: "Online Banking" },
 ] as const;
 
-export const paymentMethodEnum = z.enum(["cash", "bank_transfer", "online_banking"], {
+export const paymentMethodEnum = z.enum(["cash", "online_banking"], {
   required_error: "Payment method is required",
 });
 

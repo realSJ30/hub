@@ -12,6 +12,7 @@ import {
   ArrowRight,
   CheckCircle,
   CreditCard,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,6 +45,7 @@ export type Booking = {
   endDate: string | Date;
   pricePerDay: number;
   totalPrice: number;
+  totalPaid?: number;
   location: string | null;
   status: string;
   metadata: string | null;
@@ -179,8 +181,28 @@ export const columns: ColumnDef<Booking>[] = [
     },
   },
   {
+    accessorKey: "totalPrice",
+    header: () => <div className="text-right">Total Amount</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("totalPrice"));
+      const formatted = new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP",
+      }).format(amount);
+
+      return (
+        <div className="text-right flex flex-col items-end gap-0.5">
+          <span className="font-bold text-neutral-900">{formatted}</span>
+          <span className="text-[10px] text-neutral-500">
+            ₱{row.original.pricePerDay.toLocaleString()}/day
+          </span>
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "status",
-    header: "Status",
+    header: "Booking Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const label = BOOKING_STATUS_LABELS[status] || status;
@@ -198,21 +220,52 @@ export const columns: ColumnDef<Booking>[] = [
     },
   },
   {
-    accessorKey: "totalPrice",
-    header: () => <div className="text-right">Total Amount</div>,
+    id: "paymentStatus",
+    header: "Payment Status",
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("totalPrice"));
-      const formatted = new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency: "PHP",
-      }).format(amount);
+      const totalPrice = row.original.totalPrice;
+      const totalPaid = row.original.totalPaid || 0;
+
+      let label = "Partially Paid";
+      let styles = "bg-amber-50 text-amber-700 border-amber-200";
+
+      if (totalPaid <= 0) {
+        label = "Unpaid";
+        styles = "bg-red-50 text-red-700 border-red-200";
+      } else if (totalPaid >= totalPrice) {
+        label = "Paid";
+        styles = "bg-emerald-50 text-emerald-700 border-emerald-200";
+      }
+
+      const remaining = Math.max(totalPrice - totalPaid, 0);
+      const isPartiallyPaid = totalPaid > 0 && totalPaid < totalPrice;
 
       return (
-        <div className="text-right flex flex-col items-end gap-0.5">
-          <span className="font-bold text-neutral-900">{formatted}</span>
-          <span className="text-[10px] text-neutral-500">
-            ₱{row.original.pricePerDay.toLocaleString()}/day
-          </span>
+        <div className="flex items-center gap-1.5 relative group cursor-default">
+          <div
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${styles}`}
+          >
+            {label}
+          </div>
+          {isPartiallyPaid && (
+            <>
+              <Info size={14} className="text-neutral-400" />
+              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-neutral-900 text-white text-xs font-semibold px-3 py-2 rounded-sm shadow-md invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all z-50 pointer-events-none before:absolute before:-top-1 before:left-1/2 before:-translate-x-1/2 before:border-4 before:border-transparent before:border-b-neutral-900">
+                <div className="flex justify-between mb-1">
+                  <span className="text-neutral-400">Total Paid:</span>
+                  <span className="text-emerald-400">
+                    ₱{totalPaid.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">Remaining:</span>
+                  <span className="text-amber-400">
+                    ₱{remaining.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       );
     },
