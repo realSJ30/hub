@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -31,6 +32,7 @@ interface DataTableProps<TData, TValue> {
   onStatusUpdate?: (id: string, status: string) => void;
   onRecordPayment?: (data: TData) => void;
   onViewDetails?: (id: string) => void;
+  className?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -41,7 +43,8 @@ export function DataTable<TData, TValue>({
   onStatusUpdate,
   onRecordPayment,
   onViewDetails,
-}: DataTableProps<TData, TValue>) {
+  className
+  }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
@@ -77,7 +80,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="bg-white border border-neutral-200 rounded-sm overflow-hidden shadow-sm">
+    <div className={cn("bg-white border border-neutral-200 rounded-sm overflow-hidden shadow-sm", className)}>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>

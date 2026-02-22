@@ -260,6 +260,7 @@ export default function PaymentsPage() {
                       data={payments}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      className="rounded-none"
                     />
                   ) : (
                     <DataTable
@@ -267,6 +268,7 @@ export default function PaymentsPage() {
                       data={groupedPayments}
                       onViewDetails={handleViewDetails}
                       onRecordPayment={handleRecordPayment}
+                      className="rounded-none"
                     />
                   )}
                 </div>
