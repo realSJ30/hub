@@ -24,7 +24,14 @@ import {
   Banknote,
   Smartphone,
   Plus,
+  MoreHorizontal,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format, differenceInDays } from "date-fns";
@@ -36,6 +43,8 @@ import {
 import { AddBookingSheet } from "../components/add-booking-sheet";
 import { DeleteBookingDialog } from "../components/delete-booking-dialog";
 import { RecordPaymentSheet } from "../components/record-payment-sheet";
+import { EditPaymentSheet } from "../../payments/components/edit-payment-sheet";
+import { DeletePaymentDialog } from "../../payments/components/delete-payment-dialog";
 import { useState } from "react";
 import { type Booking } from "../columns";
 
@@ -82,6 +91,10 @@ export default function BookingDetailsPage() {
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
+  const [isPaymentEditOpen, setIsPaymentEditOpen] = useState(false);
+  const [isPaymentDeleteOpen, setIsPaymentDeleteOpen] = useState(false);
+  const [paymentToEdit, setPaymentToEdit] = useState<any>(null);
+  const [paymentToDelete, setPaymentToDelete] = useState<any>(null);
   const { mutate: updateStatus, isPending: isUpdatingStatus } =
     useUpdateBookingStatus();
 
@@ -470,9 +483,42 @@ export default function BookingDetailsPage() {
                         )}
                       </div>
                     </div>
-                    <span className="text-base font-black text-emerald-600 shrink-0">
-                      ₱{payment.amount.toLocaleString()}
-                    </span>
+                    <div className="flex items-center gap-4">
+                      <span className="text-base font-black text-emerald-600 shrink-0">
+                        ₱{payment.amount.toLocaleString()}
+                      </span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-neutral-400 hover:text-neutral-600 shrink-0"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[160px]">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setPaymentToEdit(payment);
+                              setIsPaymentEditOpen(true);
+                            }}
+                          >
+                            <Edit className="mr-2 h-4 w-4" /> Edit Payment
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600"
+                            onClick={() => {
+                              setPaymentToDelete(payment);
+                              setIsPaymentDeleteOpen(true);
+                            }}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4 text-red-600" />{" "}
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 ))
               )}
@@ -634,6 +680,18 @@ export default function BookingDetailsPage() {
         bookingId={bookingId}
         bookingTotal={booking.totalPrice}
         totalPaid={totalPaid}
+      />
+
+      <EditPaymentSheet
+        open={isPaymentEditOpen}
+        onOpenChange={setIsPaymentEditOpen}
+        payment={paymentToEdit}
+      />
+
+      <DeletePaymentDialog
+        open={isPaymentDeleteOpen}
+        onOpenChange={setIsPaymentDeleteOpen}
+        payment={paymentToDelete}
       />
     </div>
   );
