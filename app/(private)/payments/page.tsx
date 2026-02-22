@@ -11,9 +11,13 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { format, isToday, isThisWeek, isThisMonth } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { DataTable } from "../bookings/data-table";
+import { columns, type Payment } from "./columns";
+import { DeletePaymentDialog } from "./components/delete-payment-dialog";
+import { EditPaymentSheet } from "./components/edit-payment-sheet";
 
 const METHOD_LABELS: Record<string, string> = {
   cash: "Cash",
@@ -40,7 +44,22 @@ function formatCurrency(val: number) {
 export default function PaymentsPage() {
   const { data: result, isLoading, isError, error } = useAllPayments();
 
+  const [paymentToEdit, setPaymentToEdit] = useState<Payment | null>(null);
+  const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
   const payments = result?.data || [];
+
+  const handleEdit = (payment: Payment) => {
+    setPaymentToEdit(payment);
+    setIsEditOpen(true);
+  };
+
+  const handleDelete = (payment: Payment) => {
+    setPaymentToDelete(payment);
+    setIsDeleteOpen(true);
+  };
 
   // Analytics
   const totalCollected = payments.reduce(
@@ -251,96 +270,29 @@ export default function PaymentsPage() {
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-neutral-100 bg-neutral-50/50">
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
-                          Booking / Customer
-                        </th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
-                          Method
-                        </th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
-                          Reference
-                        </th>
-                        <th className="px-6 py-3 text-right text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
-                          Amount
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-100">
-                      {payments.map((payment: any) => (
-                        <tr
-                          key={payment.id}
-                          className="hover:bg-neutral-50/50 transition-colors"
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col">
-                              <span className="font-semibold text-neutral-900 text-xs">
-                                {format(
-                                  new Date(payment.paidDate),
-                                  "MMM dd, yyyy",
-                                )}
-                              </span>
-                              <span className="text-[10px] text-neutral-400">
-                                {isToday(new Date(payment.paidDate))
-                                  ? "Today"
-                                  : isThisWeek(new Date(payment.paidDate), {
-                                        weekStartsOn: 1,
-                                      })
-                                    ? "This week"
-                                    : isThisMonth(new Date(payment.paidDate))
-                                      ? "This month"
-                                      : ""}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col">
-                              <span className="font-semibold text-neutral-900 text-xs">
-                                {payment.unitName}
-                              </span>
-                              <span className="text-[10px] text-neutral-400">
-                                {payment.customerName}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={cn(
-                                "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border",
-                                METHOD_BADGE_STYLES[payment.method] ||
-                                  "bg-neutral-50 text-neutral-600 border-neutral-200",
-                              )}
-                            >
-                              {METHOD_ICONS[payment.method]}
-                              {METHOD_LABELS[payment.method] || payment.method}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-xs text-neutral-500 font-mono">
-                              {payment.referenceNumber || "—"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <span className="text-sm font-black text-emerald-600">
-                              {formatCurrency(payment.amount)}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable
+                  columns={columns}
+                  data={payments}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
               )}
             </div>
           )}
         </div>
       </div>
+
+      <EditPaymentSheet
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        payment={paymentToEdit}
+      />
+
+      <DeletePaymentDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        payment={paymentToDelete}
+      />
     </div>
   );
 }

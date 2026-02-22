@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { recordPaymentSchema, type RecordPaymentInput } from "@/lib/validations/payment.schema";
+import { recordPaymentSchema, updatePaymentSchema, type RecordPaymentInput, type UpdatePaymentInput } from "@/lib/validations/payment.schema";
 import { serializePayment, serializePayments } from "@/lib/serializers/payment.serializer";
 
 export async function recordPayment(data: RecordPaymentInput) {
@@ -119,6 +119,51 @@ export async function deletePayment(id: string) {
     return {
       success: false,
       error: "Failed to delete payment.",
+    };
+  }
+}
+
+export async function updatePayment(data: UpdatePaymentInput) {
+  try {
+    const validationResult = updatePaymentSchema.safeParse(data);
+
+    if (!validationResult.success) {
+      return {
+        success: false,
+        error: "Invalid input data",
+        details: validationResult.error.flatten().fieldErrors,
+      };
+    }
+
+    const { id, bookingId, amount, method, referenceNumber, paidDate, notes } =
+      validationResult.data;
+
+    const payment = await prisma.payment.update({
+      where: { id },
+      data: {
+        bookingId,
+        amount,
+        method,
+        referenceNumber: referenceNumber || null,
+        paidDate,
+        notes: notes || null,
+      },
+    });
+
+    revalidatePath("/payments");
+    revalidatePath("/bookings");
+    revalidatePath(`/bookings/${bookingId}`);
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+      data: serializePayment(payment),
+    };
+  } catch (error) {
+    console.error("Error updating payment:", error);
+    return {
+      success: false,
+      error: "Failed to update payment.",
     };
   }
 }

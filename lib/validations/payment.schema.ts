@@ -21,3 +21,9 @@ export const recordPaymentSchema = z.object({
 });
 
 export type RecordPaymentInput = z.infer<typeof recordPaymentSchema>;
+
+export const updatePaymentSchema = recordPaymentSchema.extend({
+  id: z.string().uuid("Invalid payment ID"),
+});
+
+export type UpdatePaymentInput = z.infer<typeof updatePaymentSchema>;

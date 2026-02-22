@@ -4,8 +4,9 @@ import {
   getPaymentsForBooking,
   getAllPayments,
   deletePayment,
+  updatePayment,
 } from "@/actions/payment.actions";
-import type { RecordPaymentInput } from "@/lib/validations/payment.schema";
+import type { RecordPaymentInput, UpdatePaymentInput } from "@/lib/validations/payment.schema";
 
 export function usePaymentsForBooking(bookingId: string) {
   return useQuery({
@@ -72,6 +73,30 @@ export function useDeletePayment() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}
+
+export function useUpdatePayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: UpdatePaymentInput) => {
+      const result = await updatePayment(data);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to update payment");
+      }
+      return result;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({
+        queryKey: ["payments", { bookingId: variables.bookingId }],
+      });
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({
+        queryKey: ["booking", variables.bookingId],
+      });
     },
   });
 }
