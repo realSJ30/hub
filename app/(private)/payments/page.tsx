@@ -1,7 +1,21 @@
 "use client";
 
 import { useAllPayments } from "@/hooks";
-import { Loader2, AlertCircle, List, Layers, Plus } from "lucide-react";
+import {
+  Loader2,
+  AlertCircle,
+  List,
+  Layers,
+  Plus,
+  Edit,
+  Trash2,
+  CreditCard,
+  Banknote,
+  Smartphone,
+  SmartphoneIcon,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { isToday } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -32,6 +46,28 @@ function derivePaymentStatus(totalPrice: number, totalPaid: number) {
     label: "Partially Paid",
     styles: "bg-amber-50 text-amber-700 border-amber-200",
   };
+}
+
+const METHOD_LABELS: Record<string, string> = {
+  cash: "Cash",
+  online_banking: "Online Banking",
+};
+
+const METHOD_ICONS: Record<string, React.ReactNode> = {
+  cash: <Banknote size={16} />,
+  online_banking: <Smartphone size={16} />,
+};
+
+const METHOD_BADGE_STYLES: Record<string, string> = {
+  cash: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  online_banking: "bg-purple-50 text-purple-700 border-purple-200",
+};
+
+function formatCurrency(val: number) {
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+  }).format(val);
 }
 
 export default function PaymentsPage() {
@@ -269,6 +305,65 @@ export default function PaymentsPage() {
                       onViewDetails={handleViewDetails}
                       onRecordPayment={handleRecordPayment}
                       className="rounded-none"
+                      renderSubComponent={({ row }) => (
+                        <div className="p-4 bg-neutral-50/50 space-y-3">
+                          <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest px-2">
+                            Payment History
+                          </div>
+                          <div className="grid gap-2">
+                            {row.original.payments.map((payment: any) => (
+                              <div
+                                key={payment.id}
+                                className="bg-white border border-neutral-200 rounded-sm p-3 flex items-center justify-between group/pay"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="bg-blue-50 p-2 rounded-sm text-blue-600">
+                                    {METHOD_ICONS[payment.method] || (
+                                      <CreditCard size={14} />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-bold text-neutral-900 line-clamp-1">
+                                      {payment.referenceNumber ||
+                                        "Untracked Reference"}
+                                    </div>
+                                    <div className="text-[10px] text-neutral-500">
+                                      {format(
+                                        new Date(payment.paidDate),
+                                        "MMM dd, yyyy",
+                                      )}{" "}
+                                      • {METHOD_LABELS[payment.method]}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <span className="text-sm font-black text-emerald-600">
+                                    {formatCurrency(payment.amount)}
+                                  </span>
+                                  <div className="flex items-center gap-1 opacity-0 group-hover/pay:opacity-100 transition-opacity">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-neutral-400 hover:text-neutral-900"
+                                      onClick={() => handleEdit(payment)}
+                                    >
+                                      <Edit className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50"
+                                      onClick={() => handleDelete(payment)}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     />
                   )}
                 </div>

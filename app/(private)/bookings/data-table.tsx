@@ -12,6 +12,9 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  ExpandedState,
+  getExpandedRowModel,
+  Row,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +36,7 @@ interface DataTableProps<TData, TValue> {
   onRecordPayment?: (data: TData) => void;
   onViewDetails?: (id: string) => void;
   className?: string;
+  renderSubComponent?: (props: { row: Row<TData> }) => React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -43,8 +47,9 @@ export function DataTable<TData, TValue>({
   onStatusUpdate,
   onRecordPayment,
   onViewDetails,
-  className
-  }: DataTableProps<TData, TValue>) {
+  className,
+  renderSubComponent,
+}: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
@@ -52,6 +57,7 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [expanded, setExpanded] = React.useState<ExpandedState>({});
 
   const table = useReactTable({
     data,
@@ -69,7 +75,11 @@ export function DataTable<TData, TValue>({
       columnFilters,
       columnVisibility,
       rowSelection,
+      expanded,
     },
+    onExpandedChange: setExpanded,
+    getExpandedRowModel: getExpandedRowModel(),
+    getRowCanExpand: () => !!renderSubComponent,
     meta: {
       onEdit,
       onDelete,
@@ -80,7 +90,12 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className={cn("bg-white border border-neutral-200 rounded-sm overflow-hidden shadow-sm", className)}>
+    <div
+      className={cn(
+        "bg-white border border-neutral-200 rounded-sm overflow-hidden shadow-sm",
+        className,
+      )}
+    >
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -110,20 +125,31 @@ export function DataTable<TData, TValue>({
           <TableBody className="divide-y divide-neutral-100">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-neutral-50/50 transition-colors group border-b border-neutral-100"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-6 py-4">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                <React.Fragment key={row.id}>
+                  <TableRow
+                    data-state={row.getIsSelected() && "selected"}
+                    className="hover:bg-neutral-50/50 transition-colors group border-b border-neutral-100"
+                  >
+                    {row.getVisibleCells().map((cell: any) => (
+                      <TableCell key={cell.id} className="px-6 py-4">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {row.getIsExpanded() && renderSubComponent && (
+                    <TableRow className="bg-neutral-50/30">
+                      <TableCell
+                        colSpan={row.getVisibleCells().length}
+                        className="p-0 border-b border-neutral-100"
+                      >
+                        {renderSubComponent({ row })}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))
             ) : (
               <TableRow>

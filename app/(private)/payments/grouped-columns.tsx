@@ -3,7 +3,13 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { MoreHorizontal, Eye, Plus } from "lucide-react";
+import {
+  MoreHorizontal,
+  Eye,
+  Plus,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -36,6 +42,26 @@ const formatCurrency = (val: number) =>
   }).format(val);
 
 export const groupedColumns: ColumnDef<GroupedBookingPayment>[] = [
+  {
+    id: "expander",
+    header: () => null,
+    cell: ({ row }) => {
+      return (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 p-0"
+          onClick={row.getToggleExpandedHandler()}
+        >
+          {row.getIsExpanded() ? (
+            <ChevronDown className="h-4 w-4 text-neutral-500" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-neutral-500" />
+          )}
+        </Button>
+      );
+    },
+  },
   {
     accessorKey: "bookingId",
     header: "Booking ID",
