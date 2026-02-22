@@ -28,12 +28,10 @@ import {
   Info,
   X,
   Tag,
-  ArrowRight,
-  Calendar,
+  AlertTriangle,
 } from "lucide-react";
 import {
   createBookingSchema,
-  baseBookingSchema,
 } from "@/lib/validations/booking.schema";
 import { createCustomerSchema } from "@/lib/validations/customer.schema";
 import {
@@ -44,7 +42,6 @@ import {
   useUnitAvailability,
 } from "@/hooks";
 import { type Booking } from "../columns";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { type DateRange } from "react-day-picker";
 import { BookingDateRangePicker } from "./booking-date-range-picker";
@@ -667,22 +664,58 @@ export const AddBookingSheet = ({
                 <Label className="text-xs font-semibold">Status</Label>
                 <form.Field name="status">
                   {(field) => (
-                    <Select
-                      value={field.state.value}
-                      onValueChange={(val) => field.handleChange(val)}
-                    >
-                      <SelectTrigger className="h-10 rounded-sm">
-                        <SelectValue placeholder="Booking Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                        <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                        <SelectItem value="COMPLETED">Completed</SelectItem>
-                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                        <SelectItem value="NO_SHOW">No Show</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-2">
+                      <Select
+                        value={field.state.value}
+                        onValueChange={(val) => field.handleChange(val)}
+                      >
+                        <SelectTrigger className="h-10 rounded-sm">
+                          <SelectValue placeholder="Booking Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PENDING">Pending</SelectItem>
+                          <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                          <SelectItem value="IN_PROGRESS">
+                            In Progress
+                          </SelectItem>
+                          <SelectItem value="COMPLETED">Completed</SelectItem>
+                          <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                          <SelectItem value="NO_SHOW">No Show</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <form.Subscribe
+                        selector={(state) => [
+                          state.values.status,
+                          state.values.totalPrice,
+                        ]}
+                      >
+                        {([status, totalPrice]) => {
+                          const totalPaidAmount = booking?.totalPaid || 0;
+                          const isUnpaidCompletion =
+                            status === "COMPLETED" &&
+                            totalPaidAmount < (totalPrice as number);
+
+                          if (!isUnpaidCompletion) return null;
+
+                          return (
+                            <div className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-100 rounded-sm animate-in fade-in slide-in-from-top-1 duration-300">
+                              <AlertTriangle
+                                size={14}
+                                className="text-amber-600 shrink-0 mt-0.5"
+                              />
+                              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-tight leading-tight">
+                                Warning: Booking is not fully paid (₱
+                                {(
+                                  (totalPrice as number) - totalPaidAmount
+                                ).toLocaleString()}{" "}
+                                remaining)
+                              </p>
+                            </div>
+                          );
+                        }}
+                      </form.Subscribe>
+                    </div>
                   )}
                 </form.Field>
               </div>

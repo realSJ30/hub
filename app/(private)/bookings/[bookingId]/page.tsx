@@ -45,6 +45,7 @@ import { DeleteBookingDialog } from "../components/delete-booking-dialog";
 import { RecordPaymentSheet } from "../components/record-payment-sheet";
 import { EditPaymentSheet } from "../../payments/components/edit-payment-sheet";
 import { DeletePaymentDialog } from "../../payments/components/delete-payment-dialog";
+import { ActionConfirmationDialog } from "@/components/custom/action-confirmation-dialog";
 import { useState } from "react";
 import { type Booking } from "../columns";
 
@@ -93,10 +94,22 @@ export default function BookingDetailsPage() {
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
   const [isPaymentEditOpen, setIsPaymentEditOpen] = useState(false);
   const [isPaymentDeleteOpen, setIsPaymentDeleteOpen] = useState(false);
+  const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
   const [paymentToEdit, setPaymentToEdit] = useState<any>(null);
   const [paymentToDelete, setPaymentToDelete] = useState<any>(null);
   const { mutate: updateStatus, isPending: isUpdatingStatus } =
     useUpdateBookingStatus();
+
+  const handleMarkAsCompleted = () => {
+    // Check if fully paid
+    const isFullyPaid = totalPaid >= (booking?.totalPrice ?? 0);
+
+    if (isFullyPaid) {
+      updateStatus({ id: bookingId, status: "COMPLETED" });
+    } else {
+      setIsStatusConfirmOpen(true);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -205,7 +218,7 @@ export default function BookingDetailsPage() {
           <Button
             className="gap-2 h-10 rounded-sm bg-primary hover:bg-primary/80 text-white font-bold"
             disabled={isCompleted || isUpdatingStatus}
-            onClick={() => updateStatus({ id: bookingId, status: "COMPLETED" })}
+            onClick={handleMarkAsCompleted}
           >
             {isUpdatingStatus ? (
               <Loader2 size={16} className="animate-spin" />
@@ -692,6 +705,37 @@ export default function BookingDetailsPage() {
         open={isPaymentDeleteOpen}
         onOpenChange={setIsPaymentDeleteOpen}
         payment={paymentToDelete}
+      />
+
+      <ActionConfirmationDialog
+        open={isStatusConfirmOpen}
+        onOpenChange={setIsStatusConfirmOpen}
+        onConfirm={() => {
+          updateStatus({ id: bookingId, status: "COMPLETED" });
+          setIsStatusConfirmOpen(false);
+        }}
+        title="Payment Incomplete"
+        description={
+          <div className="space-y-4">
+            <p>
+              This booking is not yet fully paid. There is a remaining balance
+              of{" "}
+              <span className="font-black text-amber-600">
+                ₱{Math.abs(remaining).toLocaleString()}
+              </span>
+              .
+            </p>
+            <p className="text-xs text-neutral-400">
+              Marking this booking as completed will close the active rental
+              period despite the pending balance. Are you sure you want to
+              proceed?
+            </p>
+          </div>
+        }
+        confirmButtonText="Yes, Mark as Completed"
+        cancelButtonText="No, Keep Active"
+        variant="warning"
+        isPending={isUpdatingStatus}
       />
     </div>
   );

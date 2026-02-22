@@ -10,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AddBookingSheet } from "./components/add-booking-sheet";
 import { DeleteBookingDialog } from "./components/delete-booking-dialog";
 import { RecordPaymentSheet } from "./components/record-payment-sheet";
+import { ActionConfirmationDialog } from "@/components/custom/action-confirmation-dialog";
 import { useState } from "react";
 import { type Booking } from "./columns";
 
@@ -24,6 +25,10 @@ const BookingsPage = () => {
   );
   const [bookingToDelete, setBookingToDelete] = useState<Booking | null>(null);
   const [bookingForPayment, setBookingForPayment] = useState<Booking | null>(
+    null,
+  );
+  const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
+  const [bookingToComplete, setBookingToComplete] = useState<Booking | null>(
     null,
   );
 
@@ -43,6 +48,21 @@ const BookingsPage = () => {
   };
 
   const handleStatusUpdate = (id: string, status: string) => {
+    if (status === "COMPLETED") {
+      const booking = bookingsResult?.data?.find((b: Booking) => b.id === id);
+      if (booking) {
+        const totalPaid = booking.totalPaid || 0;
+        const isFullyPaid = totalPaid >= booking.totalPrice;
+
+        if (isFullyPaid) {
+          updateStatus({ id, status });
+        } else {
+          setBookingToComplete(booking);
+          setIsStatusConfirmOpen(true);
+        }
+        return;
+      }
+    }
     updateStatus({ id, status });
   };
 
@@ -116,6 +136,42 @@ const BookingsPage = () => {
         bookingId={bookingForPayment?.id || ""}
         bookingTotal={bookingForPayment?.totalPrice || 0}
         totalPaid={bookingForPayment?.totalPaid || 0}
+      />
+
+      <ActionConfirmationDialog
+        open={isStatusConfirmOpen}
+        onOpenChange={setIsStatusConfirmOpen}
+        onConfirm={() => {
+          if (bookingToComplete) {
+            updateStatus({ id: bookingToComplete.id, status: "COMPLETED" });
+          }
+          setIsStatusConfirmOpen(false);
+        }}
+        title="Payment Incomplete"
+        description={
+          <div className="space-y-4">
+            <p>
+              This booking is not yet fully paid. There is a remaining balance
+              of{" "}
+              <span className="font-black text-amber-600">
+                ₱
+                {Math.abs(
+                  (bookingToComplete?.totalPrice || 0) -
+                    (bookingToComplete?.totalPaid || 0),
+                ).toLocaleString()}
+              </span>
+              .
+            </p>
+            <p className="text-xs text-neutral-400">
+              Marking this booking as completed will close the active rental
+              period despite the pending balance. Are you sure you want to
+              proceed?
+            </p>
+          </div>
+        }
+        confirmButtonText="Yes, Mark as Completed"
+        cancelButtonText="No, Keep Active"
+        variant="warning"
       />
     </div>
   );
