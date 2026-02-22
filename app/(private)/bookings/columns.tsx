@@ -11,6 +11,7 @@ import {
   Trash2,
   ArrowRight,
   CheckCircle,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -247,6 +248,14 @@ export const columns: ColumnDef<Booking>[] = [
                 onClick={() => (table.options.meta as any)?.onEdit?.(booking)}
               >
                 <Edit className="mr-2 h-4 w-4" /> Edit Booking
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  (table.options.meta as any)?.onRecordPayment?.(booking)
+                }
+              >
+                <CreditCard className="mr-2 h-4 w-4 text-blue-600" />
+                Record Payment
               </DropdownMenuItem>
               {booking.status !== "COMPLETED" && (
                 <DropdownMenuItem

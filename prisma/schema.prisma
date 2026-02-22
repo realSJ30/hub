@@ -40,8 +40,8 @@ model Unit {
 
 // Customer model for people who rent units
 model Customer {
-  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  fullName String @map("full_name")
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName String  @map("full_name")
   phone    String
   email    String? @unique
 
@@ -77,10 +77,32 @@ model Booking {
   createdById String @map("created_by_id") @db.Uuid
 
   // Relationships
-  unit     Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  unit     Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  customer Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  payments Payment[]
 
   @@map("bookings")
+  @@schema("public")
+}
+
+// Payment model for recording payments against bookings
+model Payment {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId       String   @map("booking_id") @db.Uuid
+  amount          Decimal  @db.Decimal(10, 2)
+  method          String // cash | bank_transfer | online_banking
+  referenceNumber String?  @map("reference_number")
+  paidDate        DateTime @map("paid_date")
+  notes           String?
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relationships
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
   @@schema("public")
 }
 

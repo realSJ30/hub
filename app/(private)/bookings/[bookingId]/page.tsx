@@ -1,7 +1,11 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useBooking, useUpdateBookingStatus } from "@/hooks";
+import {
+  useBooking,
+  useUpdateBookingStatus,
+  usePaymentsForBooking,
+} from "@/hooks";
 import {
   Loader2,
   ChevronLeft,
@@ -16,6 +20,11 @@ import {
   Info,
   ArrowRight,
   CheckCircle,
+  CreditCard,
+  Banknote,
+  Building2,
+  Smartphone,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,8 +36,35 @@ import {
 } from "@/utils/constants/booking";
 import { AddBookingSheet } from "../components/add-booking-sheet";
 import { DeleteBookingDialog } from "../components/delete-booking-dialog";
+import { RecordPaymentSheet } from "../components/record-payment-sheet";
 import { useState } from "react";
 import { type Booking } from "../columns";
+
+const METHOD_LABELS: Record<string, string> = {
+  cash: "Cash",
+  bank_transfer: "Bank Transfer",
+  online_banking: "Online Banking",
+};
+
+const METHOD_ICONS: Record<string, React.ReactNode> = {
+  cash: <Banknote size={14} />,
+  bank_transfer: <Building2 size={14} />,
+  online_banking: <Smartphone size={14} />,
+};
+
+function derivePaymentStatus(totalPrice: number, totalPaid: number) {
+  if (totalPaid <= 0)
+    return { label: "Unpaid", styles: "bg-red-50 text-red-700 border-red-200" };
+  if (totalPaid >= totalPrice)
+    return {
+      label: "Paid",
+      styles: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    };
+  return {
+    label: "Partially Paid",
+    styles: "bg-amber-50 text-amber-700 border-amber-200",
+  };
+}
 
 export default function BookingDetailsPage() {
   const params = useParams();
@@ -36,10 +72,14 @@ export default function BookingDetailsPage() {
   const bookingId = params.bookingId as string;
 
   const { data: result, isLoading, isError, error } = useBooking(bookingId);
+  const { data: paymentsResult, isLoading: isLoadingPayments } =
+    usePaymentsForBooking(bookingId);
   const booking = result?.data;
+  const payments = paymentsResult?.data || [];
 
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
   const { mutate: updateStatus, isPending: isUpdatingStatus } =
     useUpdateBookingStatus();
 
@@ -105,6 +145,11 @@ export default function BookingDetailsPage() {
   const statusStyles =
     BOOKING_STATUS_STYLES[booking.status] || "bg-neutral-100 text-neutral-700";
 
+  // Payment summary
+  const totalPaid = payments.reduce((sum: number, p: any) => sum + p.amount, 0);
+  const remaining = Math.max(booking.totalPrice - totalPaid, 0);
+  const paymentStatus = derivePaymentStatus(booking.totalPrice, totalPaid);
+
   return (
     <div className="p-8 max-w-[1200px] mx-auto pb-24">
       {/* Header Actions */}
@@ -135,6 +180,13 @@ export default function BookingDetailsPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            className="gap-2 h-10 rounded-sm bg-blue-600 hover:bg-blue-700 text-white font-bold"
+            onClick={() => setIsPaymentSheetOpen(true)}
+          >
+            <CreditCard size={16} />
+            Record Payment
+          </Button>
           <Button
             className="gap-2 h-10 rounded-sm bg-primary hover:bg-primary/80 text-white font-bold"
             disabled={isCompleted || isUpdatingStatus}
@@ -297,6 +349,126 @@ export default function BookingDetailsPage() {
               </div>
             </div>
           </div>
+
+          {/* Payments Section */}
+          <div className="bg-white border border-neutral-200 rounded-sm shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-neutral-100 bg-neutral-50/50 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CreditCard size={18} className="text-neutral-900" />
+                <h2 className="font-bold text-sm uppercase tracking-wider text-neutral-900">
+                  Payments
+                </h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border",
+                    paymentStatus.styles,
+                  )}
+                >
+                  {paymentStatus.label}
+                </span>
+                <Button
+                  size="sm"
+                  className="h-8 gap-1.5 rounded-sm text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={() => setIsPaymentSheetOpen(true)}
+                >
+                  <Plus size={12} />
+                  Add Payment
+                </Button>
+              </div>
+            </div>
+
+            {/* Payment Totals */}
+            <div className="px-6 pt-4 pb-2 grid grid-cols-3 gap-4 border-b border-neutral-100 bg-neutral-50/30">
+              <div className="text-center">
+                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">
+                  Total Amount
+                </p>
+                <p className="text-lg font-black text-neutral-900">
+                  ₱{booking.totalPrice.toLocaleString()}
+                </p>
+              </div>
+              <div className="text-center border-x border-neutral-100">
+                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">
+                  Total Paid
+                </p>
+                <p className="text-lg font-black text-emerald-600">
+                  ₱{totalPaid.toLocaleString()}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">
+                  Remaining
+                </p>
+                <p
+                  className={cn(
+                    "text-lg font-black",
+                    remaining <= 0 ? "text-emerald-600" : "text-amber-600",
+                  )}
+                >
+                  ₱{remaining.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {/* Payment List */}
+            <div className="divide-y divide-neutral-100">
+              {isLoadingPayments ? (
+                <div className="flex items-center justify-center h-20">
+                  <Loader2 className="h-5 w-5 animate-spin text-neutral-400" />
+                </div>
+              ) : payments.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <div className="bg-neutral-100 p-3 rounded-full mb-3">
+                    <CreditCard size={20} className="text-neutral-400" />
+                  </div>
+                  <p className="text-sm font-semibold text-neutral-500">
+                    No payments recorded yet
+                  </p>
+                  <p className="text-xs text-neutral-400 mt-1">
+                    Record the first payment for this booking.
+                  </p>
+                </div>
+              ) : (
+                payments.map((payment: any) => (
+                  <div
+                    key={payment.id}
+                    className="px-6 py-4 flex items-start justify-between gap-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="bg-blue-50 p-2 rounded-sm text-blue-600 mt-0.5">
+                        {METHOD_ICONS[payment.method] ?? (
+                          <CreditCard size={14} />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-neutral-900">
+                          {METHOD_LABELS[payment.method] || payment.method}
+                        </p>
+                        <p className="text-xs text-neutral-500 mt-0.5">
+                          {format(new Date(payment.paidDate), "MMM dd, yyyy")}
+                        </p>
+                        {payment.referenceNumber && (
+                          <p className="text-[11px] text-neutral-400 mt-0.5">
+                            Ref: {payment.referenceNumber}
+                          </p>
+                        )}
+                        {payment.notes && (
+                          <p className="text-[11px] text-neutral-400 mt-0.5 italic">
+                            {payment.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-base font-black text-emerald-600 shrink-0">
+                      ₱{payment.amount.toLocaleString()}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Right Column: Customer & Unit */}
@@ -445,6 +617,14 @@ export default function BookingDetailsPage() {
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onSuccess={() => router.push("/bookings")}
+      />
+
+      <RecordPaymentSheet
+        open={isPaymentSheetOpen}
+        onOpenChange={setIsPaymentSheetOpen}
+        bookingId={bookingId}
+        bookingTotal={booking.totalPrice}
+        totalPaid={totalPaid}
       />
     </div>
   );

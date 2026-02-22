@@ -3,16 +3,13 @@
 import { BookingsTableHeader } from "./components/bookings-table-header";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
-import {
-  BOOKINGS_MOCK_DATA,
-  CUSTOMERS_MOCK_DATA,
-} from "@/utils/constants/mock";
 
 import { useBookings, useUpdateBookingStatus } from "@/hooks";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AddBookingSheet } from "./components/add-booking-sheet";
 import { DeleteBookingDialog } from "./components/delete-booking-dialog";
+import { RecordPaymentSheet } from "./components/record-payment-sheet";
 import { useState } from "react";
 import { type Booking } from "./columns";
 
@@ -21,10 +18,14 @@ const BookingsPage = () => {
   const { mutate: updateStatus } = useUpdateBookingStatus();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | undefined>(
     undefined,
   );
   const [bookingToDelete, setBookingToDelete] = useState<Booking | null>(null);
+  const [bookingForPayment, setBookingForPayment] = useState<Booking | null>(
+    null,
+  );
 
   const handleAdd = () => {
     setSelectedBooking(undefined);
@@ -43,6 +44,11 @@ const BookingsPage = () => {
 
   const handleStatusUpdate = (id: string, status: string) => {
     updateStatus({ id, status });
+  };
+
+  const handleRecordPayment = (booking: Booking) => {
+    setBookingForPayment(booking);
+    setIsPaymentSheetOpen(true);
   };
 
   return (
@@ -87,6 +93,7 @@ const BookingsPage = () => {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onStatusUpdate={handleStatusUpdate}
+            onRecordPayment={handleRecordPayment}
           />
         </div>
       )}
@@ -101,6 +108,14 @@ const BookingsPage = () => {
         booking={bookingToDelete}
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
+      />
+
+      <RecordPaymentSheet
+        open={isPaymentSheetOpen}
+        onOpenChange={setIsPaymentSheetOpen}
+        bookingId={bookingForPayment?.id || ""}
+        bookingTotal={bookingForPayment?.totalPrice || 0}
+        totalPaid={0}
       />
     </div>
   );

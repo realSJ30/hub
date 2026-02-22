@@ -61,9 +61,12 @@ erDiagram
       uuid id
       uuid booking_id
       numeric amount
-      string currency
-      string provider
-      string status
+      string method
+      string reference_number
+      datetime paid_date
+      string notes
+      datetime created_at
+      datetime updated_at
     }
 
     MAINTENANCE_LOGS {
@@ -129,14 +132,17 @@ The core transactional table linking units, customers, and managers.
 
 ### 5. `PAYMENTS`
 
-Handles financial records associated with bookings.
+Handles payment records associated with bookings. Supports multiple (partial) payments per booking.
 
 - `id`: Unique identifier (UUID).
 - `booking_id`: Foreign Key referencing `BOOKINGS`.
-- `amount`: Paid amount.
-- `currency`: Currency code (e.g., 'PHP', 'USD').
-- `provider`: Payment gateway or method (e.g., 'Stripe', 'Cash').
-- `status`: Payment status (e.g., 'Succeeded', 'Pending', 'Failed').
+- `amount`: Payment amount (supports partial payments).
+- `method`: Payment method (`cash`, `bank_transfer`, `online_banking`).
+- `reference_number`: Optional reference/transaction number.
+- `paid_date`: Date the payment was made.
+- `notes`: Optional admin notes.
+- `created_at`: Record creation timestamp.
+- `updated_at`: Last update timestamp.
 
 ### 6. `MAINTENANCE_LOGS`
 
