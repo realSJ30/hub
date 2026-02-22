@@ -52,7 +52,12 @@ const METHOD_ICONS: Record<string, React.ReactNode> = {
 function derivePaymentStatus(totalPrice: number, totalPaid: number) {
   if (totalPaid <= 0)
     return { label: "Unpaid", styles: "bg-red-50 text-red-700 border-red-200" };
-  if (totalPaid >= totalPrice)
+  if (totalPaid > totalPrice)
+    return {
+      label: "Overpaid",
+      styles: "bg-amber-50 text-amber-700 border-amber-200",
+    };
+  if (totalPaid === totalPrice)
     return {
       label: "Paid",
       styles: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -144,7 +149,7 @@ export default function BookingDetailsPage() {
 
   // Payment summary
   const totalPaid = payments.reduce((sum: number, p: any) => sum + p.amount, 0);
-  const remaining = Math.max(booking.totalPrice - totalPaid, 0);
+  const remaining = booking.totalPrice - totalPaid;
   const paymentStatus = derivePaymentStatus(booking.totalPrice, totalPaid);
 
   return (
@@ -401,10 +406,17 @@ export default function BookingDetailsPage() {
                 <p
                   className={cn(
                     "text-lg font-black",
-                    remaining <= 0 ? "text-emerald-600" : "text-amber-600",
+                    remaining <= 0
+                      ? remaining < 0
+                        ? "text-amber-600"
+                        : "text-emerald-600"
+                      : "text-amber-600",
                   )}
                 >
-                  ₱{remaining.toLocaleString()}
+                  ₱{Math.abs(remaining).toLocaleString()}{" "}
+                  {remaining < 0 && (
+                    <span className="text-sm ml-1">(Overpaid)</span>
+                  )}
                 </p>
               </div>
             </div>
