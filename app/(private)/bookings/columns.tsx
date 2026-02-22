@@ -236,7 +236,7 @@ export const columns: ColumnDef<Booking>[] = [
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[160px]">
+            <DropdownMenuContent align="end" className="w-[180px]">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -259,6 +259,7 @@ export const columns: ColumnDef<Booking>[] = [
               </DropdownMenuItem>
               {booking.status !== "COMPLETED" && (
                 <DropdownMenuItem
+                  className="text-emerald-600 focus:text-emerald-600"
                   onClick={() =>
                     (table.options.meta as any)?.onStatusUpdate?.(
                       booking.id,
@@ -267,7 +268,7 @@ export const columns: ColumnDef<Booking>[] = [
                   }
                 >
                   <CheckCircle className="mr-2 h-4 w-4 text-emerald-600" />
-                  Completed
+                  Mark Complete
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
@@ -275,7 +276,7 @@ export const columns: ColumnDef<Booking>[] = [
                 className="text-red-600 focus:text-red-600"
                 onClick={() => (table.options.meta as any)?.onDelete?.(booking)}
               >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                <Trash2 className="mr-2 h-4 w-4 text-red-600" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
