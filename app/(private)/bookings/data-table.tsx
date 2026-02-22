@@ -30,6 +30,7 @@ interface DataTableProps<TData, TValue> {
   onDelete?: (data: TData) => void;
   onStatusUpdate?: (id: string, status: string) => void;
   onRecordPayment?: (data: TData) => void;
+  onViewDetails?: (id: string) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -39,6 +40,7 @@ export function DataTable<TData, TValue>({
   onDelete,
   onStatusUpdate,
   onRecordPayment,
+  onViewDetails,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -70,6 +72,7 @@ export function DataTable<TData, TValue>({
       onDelete,
       onStatusUpdate,
       onRecordPayment,
+      onViewDetails,
     },
   });
 
