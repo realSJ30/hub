@@ -7,10 +7,8 @@ interface UnitStatusBadgeProps {
 export const UnitStatusBadge = ({ status }: UnitStatusBadgeProps) => {
   const getStatusStyles = (status: string) => {
     switch (status) {
-      case "AVAILABLE":
+      case "OPERATIONAL":
         return "bg-emerald-50 text-emerald-700 border-emerald-100";
-      case "RENTED":
-        return "bg-blue-50 text-blue-700 border-blue-100";
       case "MAINTENANCE":
         return "bg-amber-50 text-amber-700 border-amber-100";
       default:
@@ -20,10 +18,8 @@ export const UnitStatusBadge = ({ status }: UnitStatusBadgeProps) => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case "AVAILABLE":
-        return "Available";
-      case "RENTED":
-        return "Rented";
+      case "OPERATIONAL":
+        return "Operational";
       case "MAINTENANCE":
         return "Maintenance";
       default:

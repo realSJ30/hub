@@ -24,7 +24,7 @@ export interface DashboardStats {
   totalCollected: number;
   outstandingBalance: number;
   totalUnits: number;
-  availableUnits: number;
+  operationalUnits: number;
   monthlyData: MonthlyDataPoint[];
   statusBreakdown: BookingStatusBreakdown[];
   recentBookings: {
@@ -77,8 +77,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   // Fetch unit counts
   const totalUnits = await prisma.unit.count();
-  const availableUnits = await prisma.unit.count({
-    where: { status: "AVAILABLE" },
+  const operationalUnits = await prisma.unit.count({
+    where: { status: "OPERATIONAL" },
   });
 
   const totalBookings = bookings.length;
@@ -183,7 +183,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     totalCollected,
     outstandingBalance,
     totalUnits,
-    availableUnits,
+    operationalUnits,
     monthlyData,
     statusBreakdown,
     recentBookings,

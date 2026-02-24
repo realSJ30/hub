@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const unitStatusEnum = z.enum(["AVAILABLE", "RENTED", "MAINTENANCE"], {
+export const unitStatusEnum = z.enum(["OPERATIONAL", "MAINTENANCE"], {
   required_error: "Status is required",
 });
 

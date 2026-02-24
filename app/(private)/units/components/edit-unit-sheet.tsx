@@ -52,7 +52,7 @@ export const EditUnitSheet = ({
       transmission: "Automatic",
       capacity: 1,
       pricePerDay: 0,
-      status: "AVAILABLE" as any,
+      status: "OPERATIONAL" as any,
       imageUrl: "",
     },
     onSubmit: async ({ value }) => {
@@ -294,8 +294,7 @@ export const EditUnitSheet = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="AVAILABLE">Available</SelectItem>
-                    <SelectItem value="RENTED">Rented</SelectItem>
+                    <SelectItem value="OPERATIONAL">Operational</SelectItem>
                     <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
                   </SelectContent>
                 </Select>

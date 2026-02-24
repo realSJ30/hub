@@ -253,16 +253,16 @@ const DashboardPage = async () => {
             <div className="flex items-center gap-3">
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs text-neutral-500">Available</span>
+                  <span className="text-xs text-neutral-500">Operational</span>
                   <span className="text-xs font-semibold text-neutral-900">
-                    {stats.availableUnits} / {stats.totalUnits}
+                    {stats.operationalUnits} / {stats.totalUnits}
                   </span>
                 </div>
                 <div className="w-full bg-neutral-100 rounded-full h-2 overflow-hidden">
                   <div
                     className="bg-primary rounded-full h-2 transition-all duration-500"
                     style={{
-                      width: `${stats.totalUnits > 0 ? (stats.availableUnits / stats.totalUnits) * 100 : 0}%`,
+                      width: `${stats.totalUnits > 0 ? (stats.operationalUnits / stats.totalUnits) * 100 : 0}%`,
                     }}
                   />
                 </div>

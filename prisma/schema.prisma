@@ -21,7 +21,7 @@ model Unit {
   transmission String
   capacity     Int
   pricePerDay  Decimal    @map("price_per_day") @db.Decimal(10, 2)
-  status       UnitStatus @default(AVAILABLE)
+  status       UnitStatus @default(OPERATIONAL)
   imageUrl     String?    @map("image_url")
 
   // Timestamps
@@ -108,8 +108,7 @@ model Payment {
 
 // Enum for unit status
 enum UnitStatus {
-  AVAILABLE
-  RENTED
+  OPERATIONAL
   MAINTENANCE
 
   @@schema("public")

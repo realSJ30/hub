@@ -134,8 +134,7 @@ export const UnitFiltersDropdown = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">All Statuses</SelectItem>
-                  <SelectItem value="AVAILABLE">Available</SelectItem>
-                  <SelectItem value="RENTED">Rented</SelectItem>
+                  <SelectItem value="OPERATIONAL">Operational</SelectItem>
                   <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
                 </SelectContent>
               </Select>
