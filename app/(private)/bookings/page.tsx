@@ -11,6 +11,7 @@ import { AddBookingSheet } from "./components/add-booking-sheet";
 import { DeleteBookingDialog } from "./components/delete-booking-dialog";
 import { RecordPaymentSheet } from "./components/record-payment-sheet";
 import { ActionConfirmationDialog } from "@/components/custom/action-confirmation-dialog";
+import { MonthlyCalendar } from "./components/monthly-calendar";
 import { useState } from "react";
 import { type Booking } from "./columns";
 
@@ -31,6 +32,7 @@ const BookingsPage = () => {
   const [bookingToComplete, setBookingToComplete] = useState<Booking | null>(
     null,
   );
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
 
   const handleAdd = () => {
     setSelectedBooking(undefined);
@@ -72,8 +74,12 @@ const BookingsPage = () => {
   };
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto">
-      <BookingsTableHeader onAdd={handleAdd} />
+    <div className="p-8 max-w-[1600px] mx-auto flex flex-col h-[calc(100vh-64px)]">
+      <BookingsTableHeader
+        onAdd={handleAdd}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+      />
 
       {/* Loading State */}
       {isLoading && (
@@ -104,17 +110,23 @@ const BookingsPage = () => {
         </div>
       )}
 
-      {/* Data Table */}
+      {/* Data View */}
       {!isLoading && !isError && (
-        <div className="mt-6">
-          <DataTable
-            columns={columns}
-            data={bookingsResult?.data || []}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onStatusUpdate={handleStatusUpdate}
-            onRecordPayment={handleRecordPayment}
-          />
+        <div className="mt-6 flex-1 min-h-0 flex flex-col">
+          {viewMode === "list" ? (
+            <DataTable
+              columns={columns}
+              data={bookingsResult?.data || []}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onStatusUpdate={handleStatusUpdate}
+              onRecordPayment={handleRecordPayment}
+            />
+          ) : (
+            <div className="flex-1 bg-white border border-neutral-200 shadow-sm rounded-sm flex flex-col overflow-hidden">
+              <MonthlyCalendar bookings={bookingsResult?.data || []} />
+            </div>
+          )}
         </div>
       )}
 
