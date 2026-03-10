@@ -37,6 +37,11 @@ export interface DashboardStats {
     totalPrice: number;
     totalPaid: number;
   }[];
+  availableUnitsToday: {
+    id: string;
+    name: string;
+    status: string;
+  }[];
 }
 
 const MONTH_NAMES = [
@@ -76,10 +81,11 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   });
 
   // Fetch unit counts
-  const totalUnits = await prisma.unit.count();
-  const operationalUnits = await prisma.unit.count({
-    where: { status: "OPERATIONAL" },
+  const allUnits = await prisma.unit.findMany({
+    select: { id: true, name: true, status: true },
   });
+  const totalUnits = allUnits.length;
+  const operationalUnits = allUnits.filter((u) => u.status === "OPERATIONAL").length;
 
   const totalBookings = bookings.length;
 
@@ -174,6 +180,22 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     totalPaid: b.payments.reduce((sum, p) => sum + Number(p.amount), 0),
   }));
 
+  // Available units today
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  
+  const activeBookingsToday = bookings.filter(
+    (b) =>
+      ["CONFIRMED", "IN_PROGRESS", "PENDING"].includes(b.status) &&
+      new Date(b.startDate) <= todayEnd &&
+      new Date(b.endDate) >= todayStart
+  );
+  const bookedUnitIds = new Set(activeBookingsToday.map((b) => b.unitId));
+
+  const availableUnitsToday = allUnits
+    .filter((u) => !bookedUnitIds.has(u.id))
+    .map((u) => ({ id: u.id, name: u.name, status: u.status }));
+
   return {
     totalBookings,
     activeBookings,
@@ -187,5 +209,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     monthlyData,
     statusBreakdown,
     recentBookings,
+    availableUnitsToday,
   };
 }

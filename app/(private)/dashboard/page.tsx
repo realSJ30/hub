@@ -61,35 +61,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   },
 };
 
-const shortcuts = [
-  {
-    label: "Bookings",
-    description: "Manage all rental bookings",
-    href: "/bookings",
-    icon: BookOpen,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
-    hoverBorder: "hover:border-blue-200",
-  },
-  {
-    label: "Units",
-    description: "View and manage fleet",
-    href: "/units",
-    icon: Car,
-    color: "text-violet-600",
-    bgColor: "bg-violet-50",
-    hoverBorder: "hover:border-violet-200",
-  },
-  {
-    label: "Payments",
-    description: "Track payment records",
-    href: "/payments",
-    icon: CreditCard,
-    color: "text-emerald-600",
-    bgColor: "bg-emerald-50",
-    hoverBorder: "hover:border-emerald-200",
-  },
-];
+
 
 const DashboardPage = async () => {
   const supabase = await createClient();
@@ -202,47 +174,70 @@ const DashboardPage = async () => {
         </div>
       </section>
 
-      {/* ─── Bottom Section: Quick Access + Recent Bookings ─── */}
+      {/* ─── Bottom Section: Available Units + Recent Bookings ─── */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
-        {/* Quick Access */}
+        {/* Available Units Today */}
         <section className="xl:col-span-1">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp size={16} className="text-neutral-400" />
-            <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-              Quick Access
-            </h2>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-neutral-400" />
+              <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+                Available Units Today
+              </h2>
+            </div>
           </div>
 
           <div className="space-y-2.5">
-            {shortcuts.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-4 bg-white p-4 rounded-md border border-neutral-200 shadow-sm transition-all duration-200 hover:shadow-md group",
-                  item.hoverBorder,
-                )}
-              >
-                <div
-                  className={cn(
-                    "p-2.5 rounded-md shrink-0 transition-transform duration-200 group-hover:scale-110",
-                    item.bgColor,
-                  )}
-                >
-                  <item.icon size={20} className={item.color} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-neutral-900">
-                    {item.label}
-                  </p>
-                  <p className="text-xs text-neutral-500">{item.description}</p>
-                </div>
-                <ArrowUpRight
-                  size={16}
-                  className="text-neutral-300 group-hover:text-neutral-500 transition-colors shrink-0"
-                />
-              </Link>
-            ))}
+            {stats.availableUnitsToday.length === 0 ? (
+              <div className="bg-white p-6 rounded-md border border-neutral-200 shadow-sm flex flex-col items-center justify-center text-center">
+                <Car size={24} className="text-neutral-300 mb-2" />
+                <p className="text-sm font-medium text-neutral-600">No units available</p>
+                <p className="text-xs text-neutral-400 mt-1">All units are currently booked for today.</p>
+              </div>
+            ) : (
+              stats.availableUnitsToday.map((unit) => {
+                const isOperational = unit.status === "OPERATIONAL";
+
+                return (
+                  <Link
+                    key={unit.id}
+                    href={`/units/${unit.id}`}
+                    className={cn(
+                      "flex items-center gap-4 bg-white p-4 rounded-md border border-neutral-200 shadow-sm transition-all duration-200 hover:shadow-md group",
+                      isOperational ? "hover:border-emerald-200" : "hover:border-amber-200"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "p-2.5 rounded-md shrink-0 transition-transform duration-200 group-hover:scale-110",
+                        isOperational
+                          ? "bg-emerald-50 text-emerald-600"
+                          : "bg-amber-50 text-amber-600"
+                      )}
+                    >
+                      <Car size={20} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-neutral-900 truncate">
+                        {unit.name}
+                      </p>
+                      <p className="text-xs text-neutral-500 capitalize">
+                        {unit.status.toLowerCase().replace("_", " ")}
+                      </p>
+                    </div>
+                    <ArrowUpRight
+                      size={16}
+                      className={cn(
+                        "transition-colors shrink-0",
+                        isOperational
+                          ? "text-neutral-300 group-hover:text-emerald-500"
+                          : "text-neutral-300 group-hover:text-amber-500"
+                      )}
+                    />
+                  </Link>
+                );
+              })
+            )}
           </div>
 
           {/* Fleet Summary Mini-Card */}
