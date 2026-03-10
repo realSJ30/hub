@@ -14,22 +14,22 @@ const Navbar = () => {
           </Link>
           <nav className="hidden gap-6 md:flex">            
             <Link
-              href="#"
+              href="#about"
               className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
-              How it works
+              About
             </Link>
             <Link
-              href="#"
+              href="#services"
               className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
-              Benefits
+              Services
             </Link>
             <Link
-              href="#"
+              href="#faq"
               className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
-              Pricing
+              FAQ
             </Link>
           </nav>
         </div>
