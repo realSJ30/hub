@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { ArrowRight, CheckCircle2, Sparkle } from 'lucide-react'
+import Image from 'next/image'
 
 const Hero = () => {
   return (
@@ -47,45 +48,41 @@ const Hero = () => {
           </div>
           
           {/* Visual Side */}
-          <div className='flex items-center justify-center lg:justify-end mt-12 lg:mt-0'>
-            <div className='relative w-full max-w-[550px] aspect-square lg:aspect-4/3 rounded-2xl bg-background/40 p-4 shadow-2xl ring-1 ring-border/50 backdrop-blur-xl'>
-                <div className="h-full w-full rounded-xl bg-card border shadow-sm relative overflow-hidden flex flex-col">
-                    {/* Mock Browser Header */}
-                    <div className="h-10 border-b bg-muted/30 px-4 flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-red-400/80"></div>
-                        <div className="h-3 w-3 rounded-full bg-amber-400/80"></div>
-                        <div className="h-3 w-3 rounded-full bg-green-400/80"></div>
-                        <div className="ml-4 h-5 w-48 rounded bg-muted/50"></div>
-                    </div>
-                    {/* Mock Content */}
-                    <div className="flex-1 p-6 relative">
-                        <div className="flex gap-6 h-full">
-                            {/* Sidebar Mock */}
-                            <div className="hidden sm:flex w-16 h-full flex-col gap-4 border-r pr-4">
-                                <div className="h-8 w-full bg-primary/10 rounded-md"></div>
-                                <div className="h-8 w-full bg-muted/30 rounded-md"></div>
-                                <div className="h-8 w-full bg-muted/30 rounded-md"></div>
-                            </div>
-                            {/* Main Content Mock */}
-                            <div className="flex-1 flex flex-col gap-4">
-                                <div className="flex justify-between items-center">
-                                    <div className="h-8 w-32 bg-muted/50 rounded-md"></div>
-                                    <div className="h-8 w-8 bg-muted/50 rounded-full"></div>
-                                </div>
-                                <div className="h-32 w-full bg-linear-to-br from-primary/5 to-primary/10 rounded-lg border border-primary/10 p-4 flex items-end">
-                                    <div className="h-16 w-12 bg-primary/20 rounded-md mr-2"></div>
-                                    <div className="h-24 w-12 bg-primary/30 rounded-md mr-2"></div>
-                                    <div className="h-20 w-12 bg-primary/25 rounded-md"></div>
-                                </div>
-                                <div className="space-y-2">
-                                    <div className="h-4 w-full bg-muted/30 rounded"></div>
-                                    <div className="h-4 w-5/6 bg-muted/30 rounded"></div>
-                                    <div className="h-4 w-4/6 bg-muted/30 rounded"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+          <div className='flex items-center justify-center lg:justify-end mt-12 lg:mt-0 relative'>
+            <div className='relative w-full max-w-[600px] aspect-square lg:aspect-4/3'>
+              {/* Back Image (Dash 2) */}
+              <div className="absolute top-0 right-0 w-[85%] rounded-2xl border border-border/50 shadow-2xl bg-background overflow-hidden z-10 transition-all hover:-translate-y-3 hover:translate-x-3 hover:rotate-1 duration-500 ring-1 ring-border/20 flex flex-col">
+                {/* Browser Header */}
+                <div className="h-8 border-b border-border/50 bg-muted/30 px-3 flex items-center gap-1.5 shrink-0">
+                  <div className="h-2.5 w-2.5 rounded-full bg-[#ff5f56]"></div>
+                  <div className="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]"></div>
+                  <div className="h-2.5 w-2.5 rounded-full bg-[#27c93f]"></div>
                 </div>
+                <Image
+                  src="/assets/hero-dash-2.png"
+                  alt="RentHub Dashboard Overview"
+                  width={800}
+                  height={500}
+                  className="w-full h-auto object-cover border-b-4 sm:border-b-8 border-x-4 sm:border-x-8 border-background rounded-b-xl"
+                />
+              </div>
+
+              {/* Front Image (Dash 1) */}
+              <div className="absolute bottom-0 left-0 w-[85%] rounded-2xl border border-border/50 shadow-2xl bg-background overflow-hidden z-20 transition-all hover:-translate-y-3 hover:-translate-x-3 hover:-rotate-1 duration-500 ring-1 ring-border/20 flex flex-col">
+                {/* Browser Header */}
+                <div className="h-8 border-b border-border/50 bg-muted/30 px-3 flex items-center gap-1.5 shrink-0 backdrop-blur-sm">
+                  <div className="h-2.5 w-2.5 rounded-full bg-[#ff5f56]"></div>
+                  <div className="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]"></div>
+                  <div className="h-2.5 w-2.5 rounded-full bg-[#27c93f]"></div>
+                </div>
+                <Image
+                  src="/assets/hero-dash-1.png"
+                  alt="RentHub Fleet Management"
+                  width={800}
+                  height={500}
+                  className="w-full h-auto object-cover border-b-4 sm:border-b-8 border-x-4 sm:border-x-8 border-background rounded-b-xl"
+                />
+              </div>
             </div>
           </div>
         </div>

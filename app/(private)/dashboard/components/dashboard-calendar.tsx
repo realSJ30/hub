@@ -121,7 +121,7 @@ export default function DashboardCalendar({ bookings }: DashboardCalendarProps) 
                 {/* Day Number */}
                 <div
                   className={cn(
-                    "flex items-center justify-center rounded-full transition-colors flex-shrink-0",
+                    "flex items-center justify-center rounded-full transition-colors shrink-0",
                     isExpanded ? "w-7 h-7 text-sm ml-auto" : "w-5 h-5 text-[10px] mx-auto",
                     today
                       ? "bg-primary text-white font-bold shadow-sm"
