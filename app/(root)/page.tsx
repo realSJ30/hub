@@ -2,6 +2,7 @@ import Navbar from "@/components/custom/navbar";
 import Hero from "./components/hero";
 import About from "./components/about";
 import Services from "./components/services";
+import Pricing from "./components/pricing";
 import Testimonials from "./components/testimonials";
 import FAQ from "./components/faq";
 import Footer from "./components/footer";
@@ -23,6 +24,7 @@ const RootPage = () => {
 
       <About />
       <Services />
+      <Pricing />
       <Testimonials />
       <FAQ />
       <Footer />
