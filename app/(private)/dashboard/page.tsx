@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import DashboardCard from "./components/dashboard-card";
 import RevenueChart from "./components/revenue-chart";
-import BookingStatusChart from "./components/booking-status-chart";
+import DashboardCalendar from "./components/dashboard-calendar";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -158,19 +158,20 @@ const DashboardPage = async () => {
         </div>
       </section>
 
-      {/* ─── Charts Section ─── */}
+      {/* ─── Charts & Calendar Section ─── */}
       <section className="mt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Revenue bar chart — 2/3 width */}
-          <div className="lg:col-span-2">
-            <RevenueChart data={stats.monthlyData} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 stretch items-stretch">
+          {/* Revenue bar chart — 1/2 width */}
+          <div className="lg:col-span-1 h-full min-h-[360px] flex">
+            <div className="w-full h-full flex flex-col">
+              <RevenueChart data={stats.monthlyData} />
+            </div>
           </div>
-          {/* Booking status donut chart — 1/3 width */}
-          <div className="lg:col-span-1">
-            <BookingStatusChart
-              data={stats.statusBreakdown}
-              totalBookings={stats.totalBookings}
-            />
+          {/* Mini Calendar Overivew — 1/2 width */}
+          <div className="lg:col-span-1 h-full min-h-[360px] flex">
+            <div className="w-full h-full flex flex-col">
+              <DashboardCalendar bookings={stats.allBookings} />
+            </div>
           </div>
         </div>
       </section>

@@ -43,7 +43,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function RevenueChart({ data }: RevenueChartProps) {
   return (
-    <div className="bg-white rounded-md border border-neutral-200 shadow-sm p-5">
+    <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-5 flex flex-col h-full">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="text-sm font-semibold text-neutral-800">
@@ -52,7 +52,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
           <p className="text-xs text-neutral-400 mt-0.5">Last 6 months</p>
         </div>
       </div>
-      <div className="h-[260px] w-full">
+      <div className="flex-1 w-full min-h-[260px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}

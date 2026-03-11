@@ -43,6 +43,16 @@ export interface DashboardStats {
     status: string;
     imageUrl: string | null;
   }[];
+  allBookings: {
+    id: string;
+    customerName: string;
+    unitName: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+    totalPrice: number;
+    totalPaid: number;
+  }[];
 }
 
 const MONTH_NAMES = [
@@ -181,6 +191,20 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     totalPaid: b.payments.reduce((sum, p) => sum + Number(p.amount), 0),
   }));
 
+  // All valid bookings for calendar
+  const allBookings = bookings
+    .filter((b) => b.status !== "CANCELLED")
+    .map((b) => ({
+      id: b.id,
+      customerName: b.customer.fullName,
+      unitName: b.unit.name,
+      startDate: b.startDate.toISOString(),
+      endDate: b.endDate.toISOString(),
+      status: b.status,
+      totalPrice: Number(b.totalPrice),
+      totalPaid: b.payments.reduce((sum, p) => sum + Number(p.amount), 0),
+    }));
+
   // Available units today
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
   const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
@@ -211,5 +235,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     statusBreakdown,
     recentBookings,
     availableUnitsToday,
+    allBookings,
   };
 }
