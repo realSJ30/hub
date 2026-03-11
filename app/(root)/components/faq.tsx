@@ -29,11 +29,6 @@ const faqs = [
       "Yes. The booking system validates unit availability based on date ranges. When editing or creating a booking, you'll see an alert if the selected dates overlap with an existing reservation for the same unit.",
   },
   {
-    question: "Is my data secure?",
-    answer:
-      "Your data is protected with industry-standard security practices. Access is restricted by authenticated sessions, and all data is stored securely. Only authorized users can view and manage your business records.",
-  },
-  {
     question: "Can I mark bookings as completed or cancelled?",
     answer:
       "Yes. Bookings can be moved through status stages — Pending, Confirmed, In Progress, Completed, Cancelled, or No Show. The dashboard and booking table always reflect the current status of each rental.",
