@@ -38,6 +38,8 @@ Logic is centralized in **Server Actions**, ensuring security and server-side va
 - View availability, status, and vehicle specs.
 - Advanced filtering and real-time updates.
 - Create, Edit, and Delete units with server-side validation.
+- **Image uploads** via Supabase Storage (`units` bucket) — upload directly from the form; public image URL is stored in the database.
+- Thumbnail image column in the units table with a clickable full-size lightbox preview.
 
 ### **Booking Management (New)**
 
@@ -50,6 +52,18 @@ Logic is centralized in **Server Actions**, ensuring security and server-side va
 
 - **Zod**: Shared schemas used for both client and server validation.
 - **Serializers**: Utilities that convert Prisma-specific types (like Decimal) into JSON-safe formats for the frontend.
+
+## 🗄️ Storage
+
+Unit images are stored in **Supabase Storage** using the `units` bucket.
+
+| Setting | Value |
+|---|---|
+| Bucket | `units` |
+| Max file size | 1 MB |
+| Allowed types | `image/jpeg` |
+
+Uploads happen client-side (via `@supabase/ssr` browser client). After upload, the public URL is written into the form's `imageUrl` field and persisted by the existing server action — no schema changes required.
 
 ## 🔐 Auth & Security
 

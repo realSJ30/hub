@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,19 +21,27 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Plus, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Plus, Loader2, Upload, X, ImageIcon } from "lucide-react";
 import {
   createUnitSchema,
-  type CreateUnitInput,
 } from "@/lib/validations/unit.schema";
-import { useCreateUnit } from "@/hooks";
+import { useCreateUnit, useUploadUnitImage } from "@/hooks";
+import Image from "next/image";
 
 export const AddUnitSheet = () => {
   const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Use the custom hook for creating units
   const { mutate: createUnit, isPending } = useCreateUnit();
+  const { mutateAsync: uploadImage, isPending: uploadingImage } = useUploadUnitImage();
 
   const form = useForm({
     defaultValues: {
@@ -49,21 +57,16 @@ export const AddUnitSheet = () => {
     },
     onSubmit: async ({ value }) => {
       try {
-        // Validate with Zod before submitting
         const validatedData = createUnitSchema.parse(value);
-
-        // Clear any previous error messages
         setErrorMessage(null);
 
-        // Create the unit using the mutation hook
         createUnit(validatedData, {
           onSuccess: () => {
-            // Close sheet and reset form on success
             setOpen(false);
             form.reset();
+            setImagePreviewUrl(null);
           },
           onError: (error) => {
-            // Display error message to user
             setErrorMessage(
               error.message || "Failed to create unit. Please try again.",
             );
@@ -76,219 +79,66 @@ export const AddUnitSheet = () => {
     },
   });
 
+  const handleImageUpload = async (file: File) => {
+    setErrorMessage(null);
+    try {
+      const { publicUrl } = await uploadImage(file);
+      form.setFieldValue("imageUrl", publicUrl);
+      setImagePreviewUrl(publicUrl);
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to upload image. Please try again.");
+    }
+  };
+
+  const handleRemoveImage = () => {
+    form.setFieldValue("imageUrl", "");
+    setImagePreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleSheetOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      form.reset();
+      setImagePreviewUrl(null);
+      setErrorMessage(null);
+    }
+  };
+
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          size="sm"
-          className="gap-2 h-9 rounded-sm bg-primary hover:bg-primary/90"
-        >
-          <Plus size={16} />
-          Add New Unit
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="sm:max-w-[540px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Add New Unit</SheetTitle>
-          <SheetDescription>
-            Fill in the details below to add a new rental unit to your fleet.
-          </SheetDescription>
-        </SheetHeader>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
-          }}
-          className="space-y-6 py-6 p-6"
-        >
-          {/* Unit Name */}
-          <form.Field
-            name="name"
-            validators={{
-              onChange: ({ value }) => {
-                const result = createUnitSchema.shape.name.safeParse(value);
-                return result.success
-                  ? undefined
-                  : result.error.errors[0]?.message;
-              },
-            }}
+    <>
+      <Sheet open={open} onOpenChange={handleSheetOpenChange}>
+        <SheetTrigger asChild>
+          <Button
+            size="sm"
+            className="gap-2 h-9 rounded-sm bg-primary hover:bg-primary/90"
           >
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="name">
-                  Unit Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  placeholder="e.g., Toyota Hiace Commuter"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-red-600">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </div>
-            )}
-          </form.Field>
+            <Plus size={16} />
+            Add New Unit
+          </Button>
+        </SheetTrigger>
+        <SheetContent className="sm:max-w-[540px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Add New Unit</SheetTitle>
+            <SheetDescription>
+              Fill in the details below to add a new rental unit to your fleet.
+            </SheetDescription>
+          </SheetHeader>
 
-          {/* Brand */}
-          <form.Field
-            name="brand"
-            validators={{
-              onChange: ({ value }) => {
-                const result = createUnitSchema.shape.brand.safeParse(value);
-                return result.success
-                  ? undefined
-                  : result.error.errors[0]?.message;
-              },
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit();
             }}
+            className="space-y-6 py-6 p-6"
           >
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="brand">
-                  Brand <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="brand"
-                  placeholder="e.g., Toyota"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-red-600">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </div>
-            )}
-          </form.Field>
-
-          {/* Year */}
-          <form.Field
-            name="year"
-            validators={{
-              onChange: ({ value }) => {
-                const result = createUnitSchema.shape.year.safeParse(value);
-                return result.success
-                  ? undefined
-                  : result.error.errors[0]?.message;
-              },
-            }}
-          >
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="year">
-                  Year <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="year"
-                  type="number"
-                  placeholder="e.g., 2024"
-                  value={field.state.value}
-                  onChange={(e) =>
-                    field.handleChange(parseInt(e.target.value) || 0)
-                  }
-                  onBlur={field.handleBlur}
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-red-600">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </div>
-            )}
-          </form.Field>
-
-          {/* Plate Number */}
-          <form.Field
-            name="plate"
-            validators={{
-              onChange: ({ value }) => {
-                const result = createUnitSchema.shape.plate.safeParse(value);
-                return result.success
-                  ? undefined
-                  : result.error.errors[0]?.message;
-              },
-            }}
-          >
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="plate">
-                  Plate Number <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="plate"
-                  placeholder="e.g., ABC-1234"
-                  value={field.state.value}
-                  onChange={(e) =>
-                    field.handleChange(e.target.value.toUpperCase())
-                  }
-                  onBlur={field.handleBlur}
-                  className="uppercase"
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-red-600">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </div>
-            )}
-          </form.Field>
-
-          {/* Transmission */}
-          <form.Field
-            name="transmission"
-            validators={{
-              onChange: ({ value }) => {
-                const result =
-                  createUnitSchema.shape.transmission.safeParse(value);
-                return result.success
-                  ? undefined
-                  : result.error.errors[0]?.message;
-              },
-            }}
-          >
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="transmission">
-                  Transmission <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value)}
-                >
-                  <SelectTrigger id="transmission">
-                    <SelectValue placeholder="Select transmission type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Automatic">Automatic</SelectItem>
-                    <SelectItem value="Manual">Manual</SelectItem>
-                  </SelectContent>
-                </Select>
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-red-600">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </div>
-            )}
-          </form.Field>
-
-          {/* Capacity and Price Per Day - Two columns */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Capacity */}
+            {/* Unit Name */}
             <form.Field
-              name="capacity"
+              name="name"
               validators={{
                 onChange: ({ value }) => {
-                  const result =
-                    createUnitSchema.shape.capacity.safeParse(value);
+                  const result = createUnitSchema.shape.name.safeParse(value);
                   return result.success
                     ? undefined
                     : result.error.errors[0]?.message;
@@ -297,14 +147,79 @@ export const AddUnitSheet = () => {
             >
               {(field) => (
                 <div className="space-y-2">
-                  <Label htmlFor="capacity">
-                    Capacity <span className="text-red-500">*</span>
+                  <Label htmlFor="name">
+                    Unit Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
-                    id="capacity"
+                    id="name"
+                    placeholder="e.g., Toyota Hiace Commuter"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <p className="text-sm text-red-600">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </div>
+              )}
+            </form.Field>
+
+            {/* Brand */}
+            <form.Field
+              name="brand"
+              validators={{
+                onChange: ({ value }) => {
+                  const result = createUnitSchema.shape.brand.safeParse(value);
+                  return result.success
+                    ? undefined
+                    : result.error.errors[0]?.message;
+                },
+              }}
+            >
+              {(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="brand">
+                    Brand <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="brand"
+                    placeholder="e.g., Toyota"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <p className="text-sm text-red-600">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </div>
+              )}
+            </form.Field>
+
+            {/* Year */}
+            <form.Field
+              name="year"
+              validators={{
+                onChange: ({ value }) => {
+                  const result = createUnitSchema.shape.year.safeParse(value);
+                  return result.success
+                    ? undefined
+                    : result.error.errors[0]?.message;
+                },
+              }}
+            >
+              {(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="year">
+                    Year <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="year"
                     type="number"
-                    min="1"
-                    placeholder="15"
+                    placeholder="e.g., 2024"
                     value={field.state.value}
                     onChange={(e) =>
                       field.handleChange(parseInt(e.target.value) || 0)
@@ -320,13 +235,12 @@ export const AddUnitSheet = () => {
               )}
             </form.Field>
 
-            {/* Price Per Day */}
+            {/* Plate Number */}
             <form.Field
-              name="pricePerDay"
+              name="plate"
               validators={{
                 onChange: ({ value }) => {
-                  const result =
-                    createUnitSchema.shape.pricePerDay.safeParse(value);
+                  const result = createUnitSchema.shape.plate.safeParse(value);
                   return result.success
                     ? undefined
                     : result.error.errors[0]?.message;
@@ -335,20 +249,18 @@ export const AddUnitSheet = () => {
             >
               {(field) => (
                 <div className="space-y-2">
-                  <Label htmlFor="pricePerDay">
-                    Price/Day <span className="text-red-500">*</span>
+                  <Label htmlFor="plate">
+                    Plate Number <span className="text-red-500">*</span>
                   </Label>
                   <Input
-                    id="pricePerDay"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="3500"
+                    id="plate"
+                    placeholder="e.g., ABC-1234"
                     value={field.state.value}
                     onChange={(e) =>
-                      field.handleChange(parseFloat(e.target.value) || 0)
+                      field.handleChange(e.target.value.toUpperCase())
                     }
                     onBlur={field.handleBlur}
+                    className="uppercase"
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className="text-sm text-red-600">
@@ -358,107 +270,286 @@ export const AddUnitSheet = () => {
                 </div>
               )}
             </form.Field>
-          </div>
 
-          {/* Status */}
-          <form.Field
-            name="status"
-            validators={{
-              onChange: ({ value }) => {
-                const result = createUnitSchema.shape.status.safeParse(value);
-                return result.success
-                  ? undefined
-                  : result.error.errors[0]?.message;
-              },
-            }}
-          >
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="status">
-                  Status <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value as any)}
+            {/* Transmission */}
+            <form.Field
+              name="transmission"
+              validators={{
+                onChange: ({ value }) => {
+                  const result =
+                    createUnitSchema.shape.transmission.safeParse(value);
+                  return result.success
+                    ? undefined
+                    : result.error.errors[0]?.message;
+                },
+              }}
+            >
+              {(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="transmission">
+                    Transmission <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value)}
+                  >
+                    <SelectTrigger id="transmission">
+                      <SelectValue placeholder="Select transmission type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Automatic">Automatic</SelectItem>
+                      <SelectItem value="Manual">Manual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.errors.length > 0 && (
+                    <p className="text-sm text-red-600">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </div>
+              )}
+            </form.Field>
+
+            {/* Capacity and Price Per Day - Two columns */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Capacity */}
+              <form.Field
+                name="capacity"
+                validators={{
+                  onChange: ({ value }) => {
+                    const result =
+                      createUnitSchema.shape.capacity.safeParse(value);
+                    return result.success
+                      ? undefined
+                      : result.error.errors[0]?.message;
+                  },
+                }}
+              >
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor="capacity">
+                      Capacity <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="capacity"
+                      type="number"
+                      min="1"
+                      placeholder="15"
+                      value={field.state.value}
+                      onChange={(e) =>
+                        field.handleChange(parseInt(e.target.value) || 0)
+                      }
+                      onBlur={field.handleBlur}
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-sm text-red-600">
+                        {field.state.meta.errors[0]}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </form.Field>
+
+              {/* Price Per Day */}
+              <form.Field
+                name="pricePerDay"
+                validators={{
+                  onChange: ({ value }) => {
+                    const result =
+                      createUnitSchema.shape.pricePerDay.safeParse(value);
+                    return result.success
+                      ? undefined
+                      : result.error.errors[0]?.message;
+                  },
+                }}
+              >
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor="pricePerDay">
+                      Price/Day <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="pricePerDay"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="3500"
+                      value={field.state.value}
+                      onChange={(e) =>
+                        field.handleChange(parseFloat(e.target.value) || 0)
+                      }
+                      onBlur={field.handleBlur}
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-sm text-red-600">
+                        {field.state.meta.errors[0]}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </form.Field>
+            </div>
+
+            {/* Status */}
+            <form.Field
+              name="status"
+              validators={{
+                onChange: ({ value }) => {
+                  const result = createUnitSchema.shape.status.safeParse(value);
+                  return result.success
+                    ? undefined
+                    : result.error.errors[0]?.message;
+                },
+              }}
+            >
+              {(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="status">
+                    Status <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value as any)}
+                  >
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="OPERATIONAL">Operational</SelectItem>
+                      <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.errors.length > 0 && (
+                    <p className="text-sm text-red-600">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </div>
+              )}
+            </form.Field>
+
+            {/* Image Upload */}
+            <div className="space-y-2">
+              <Label>Unit Image (Optional)</Label>
+              <p className="text-xs text-neutral-500">JPEG only · Max 1 MB</p>
+
+              {!imagePreviewUrl ? (
+                <div
+                  className="border-2 border-dashed border-neutral-200 rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 hover:bg-neutral-50 transition-colors"
+                  onClick={() => !uploadingImage && fileInputRef.current?.click()}
                 >
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="OPERATIONAL">Operational</SelectItem>
-                    <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-                  </SelectContent>
-                </Select>
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-red-600">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
+                  {uploadingImage ? (
+                    <>
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <p className="text-sm text-neutral-500">Uploading...</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-6 w-6 text-neutral-400" />
+                      <p className="text-sm text-neutral-500">
+                        Click to upload image
+                      </p>
+                    </>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg"
+                    className="hidden"
+                    disabled={uploadingImage}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleImageUpload(file);
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="relative w-full h-40 rounded-lg overflow-hidden border border-neutral-200 block group"
+                    onClick={() => setLightboxOpen(true)}
+                    title="Click to view larger"
+                  >
+                    <Image
+                      src={imagePreviewUrl}
+                      alt="Unit preview"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-200"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <ImageIcon className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 bg-white border border-neutral-200 rounded-full p-1 shadow-sm hover:bg-red-50 hover:border-red-300 transition-colors"
+                    title="Remove image"
+                  >
+                    <X className="h-3.5 w-3.5 text-neutral-600 hover:text-red-600" />
+                  </button>
+                  <button
+                    type="button"
+                    className="mt-2 text-xs text-neutral-500 underline underline-offset-2 hover:text-primary transition-colors"
+                    onClick={() => {
+                      handleRemoveImage();
+                      setTimeout(() => fileInputRef.current?.click(), 50);
+                    }}
+                  >
+                    Replace image
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Error Message Display */}
+            {errorMessage && (
+              <div className="rounded-md bg-red-50 p-4 border border-red-200">
+                <p className="text-sm text-red-600">{errorMessage}</p>
               </div>
             )}
-          </form.Field>
 
-          {/* Image URL */}
-          <form.Field
-            name="imageUrl"
-            validators={{
-              onChange: ({ value }) => {
-                const result = createUnitSchema.shape.imageUrl.safeParse(value);
-                return result.success
-                  ? undefined
-                  : result.error.errors[0]?.message;
-              },
-            }}
-          >
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="imageUrl">Image URL (Optional)</Label>
-                <Input
-                  id="imageUrl"
-                  type="url"
-                  placeholder="https://example.com/image.jpg"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-red-600">
-                    {field.state.meta.errors[0]}
-                  </p>
+            <SheetFooter className="gap-4 px-0 flex item-center flex-row-reverse">
+              <Button type="submit" disabled={isPending || uploadingImage}>
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Unit"
                 )}
-              </div>
-            )}
-          </form.Field>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleSheetOpenChange(false)}
+                disabled={isPending || uploadingImage}
+              >
+                Cancel
+              </Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
 
-          {/* Error Message Display */}
-          {errorMessage && (
-            <div className="rounded-md bg-red-50 p-4 border border-red-200">
-              <p className="text-sm text-red-600">{errorMessage}</p>
+      {/* Lightbox */}
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-2xl p-2">
+          <DialogTitle className="sr-only">Unit Image Preview</DialogTitle>
+          {imagePreviewUrl && (
+            <div className="relative w-full aspect-video rounded-md overflow-hidden">
+              <Image
+                src={imagePreviewUrl}
+                alt="Unit image"
+                fill
+                className="object-contain"
+              />
             </div>
           )}
-
-          <SheetFooter className="gap-4 px-0 flex item-center flex-row-reverse">
-            <Button type="submit" disabled={isPending}>
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Create Unit"
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

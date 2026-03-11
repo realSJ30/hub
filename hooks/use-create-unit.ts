@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createUnit, updateUnit, deleteUnit } from "@/actions/unit.actions";
+import { createUnit, updateUnit, deleteUnit, uploadUnitImage } from "@/actions/unit.actions";
 import type { CreateUnitInput } from "@/lib/validations/unit.schema";
 
 /**
@@ -68,6 +68,38 @@ export function useDeleteUnit() {
     },
     onError: (error) => {
       console.error("Error in useDeleteUnit:", error);
+    },
+  });
+}
+
+/**
+ * Custom hook for uploading a unit image to Supabase Storage
+ *
+ * Wraps the `uploadUnitImage` server action. The caller provides a
+ * plain `File`; the hook converts it into a `FormData` before calling
+ * the action (File objects cannot be serialised across the
+ * server/client boundary).
+ *
+ * @example
+ * const { mutateAsync: uploadImage, isPending } = useUploadUnitImage();
+ * const { publicUrl } = await uploadImage(file);
+ */
+export function useUploadUnitImage() {
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const result = await uploadUnitImage(formData);
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to upload image");
+      }
+
+      return result.data!; // { publicUrl: string }
+    },
+    onError: (error) => {
+      console.error("Error in useUploadUnitImage:", error);
     },
   });
 }

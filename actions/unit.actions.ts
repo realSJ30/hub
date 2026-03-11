@@ -289,4 +289,71 @@ export async function getUnit(id: string) {
   }
 }
 
+/**
+ * Server Action: Upload a unit image to Supabase Storage
+ *
+ * Accepts a FormData payload containing a single "file" entry.
+ * Validates the file type (image/jpeg) and size (≤ 1 MB) on the
+ * server before uploading to the `units` storage bucket.
+ *
+ * NOTE: File objects cannot be serialised across the server/client
+ * boundary, so FormData is the correct transport here.
+ *
+ * @param formData - FormData with a "file" field containing the image
+ * @returns Object containing either the public image URL or an error
+ */
+export async function uploadUnitImage(formData: FormData) {
+  const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
+  const ALLOWED_TYPE = "image/jpeg";
+  const BUCKET = "units";
 
+  try {
+    // Authenticate
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+
+    // Extract file
+    const file = formData.get("file");
+    if (!(file instanceof File)) {
+      return { success: false, error: "No file provided." };
+    }
+
+    // Validate type
+    if (file.type !== ALLOWED_TYPE) {
+      return { success: false, error: "Only JPEG images are allowed." };
+    }
+
+    // Validate size
+    if (file.size > MAX_FILE_SIZE) {
+      return { success: false, error: "Image must be 1 MB or smaller." };
+    }
+
+    // Build a unique storage path
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(fileName, file, { contentType: ALLOWED_TYPE, upsert: false });
+
+    if (uploadError) {
+      console.error("Supabase storage upload error:", uploadError);
+      return { success: false, error: uploadError.message };
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from(BUCKET)
+      .getPublicUrl(fileName);
+
+    return { success: true, data: { publicUrl: publicUrlData.publicUrl } };
+  } catch (error) {
+    console.error("Error uploading unit image:", error);
+    return { success: false, error: "Failed to upload image. Please try again." };
+  }
+}

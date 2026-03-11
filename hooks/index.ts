@@ -7,7 +7,7 @@
  * import { useCreateUnit, useUnits } from "@/hooks";
  */
 
-export { useCreateUnit, useUpdateUnit, useDeleteUnit } from "./use-create-unit";
+export { useCreateUnit, useUpdateUnit, useDeleteUnit, useUploadUnitImage } from "./use-create-unit";
 export { useUnits, useUnit } from "./use-units";
 export { useBookings, useBookingsByUnit, useBooking, useCreateBooking, useUpdateBooking, useDeleteBooking, useUpdateBookingStatus } from "./use-bookings";
 export { useCustomers, useUpsertCustomer } from "./use-customers";
