@@ -42,6 +42,7 @@ function UnitImageThumbnail({ unit }: { unit: Unit }) {
           src={unit.imageUrl}
           alt={unit.name}
           fill
+          unoptimized
           className="object-cover group-hover:scale-110 transition-transform duration-200"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
@@ -57,6 +58,7 @@ function UnitImageThumbnail({ unit }: { unit: Unit }) {
               src={unit.imageUrl}
               alt={unit.name}
               fill
+              unoptimized
               className="object-contain"
             />
           </div>

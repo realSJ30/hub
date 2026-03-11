@@ -475,6 +475,7 @@ export const AddUnitSheet = () => {
                       src={imagePreviewUrl}
                       alt="Unit preview"
                       fill
+                      unoptimized
                       className="object-cover group-hover:scale-105 transition-transform duration-200"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
@@ -544,6 +545,7 @@ export const AddUnitSheet = () => {
                 src={imagePreviewUrl}
                 alt="Unit image"
                 fill
+                unoptimized
                 className="object-contain"
               />
             </div>
