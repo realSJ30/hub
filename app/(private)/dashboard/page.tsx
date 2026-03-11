@@ -18,6 +18,7 @@ import RevenueChart from "./components/revenue-chart";
 import BookingStatusChart from "./components/booking-status-chart";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const formatCurrency = (amount: number) => {
   return `₱${amount.toLocaleString(undefined, {
@@ -209,13 +210,23 @@ const DashboardPage = async () => {
                   >
                     <div
                       className={cn(
-                        "p-2.5 rounded-md shrink-0 transition-transform duration-200 group-hover:scale-110",
-                        isOperational
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-amber-50 text-amber-600"
+                        "h-12 w-16 relative rounded-md shrink-0 border border-neutral-100 overflow-hidden bg-neutral-50",
+                        isOperational ? "group-hover:border-emerald-200" : "group-hover:border-amber-200"
                       )}
                     >
-                      <Car size={20} />
+                      {unit.imageUrl ? (
+                        <Image
+                          src={unit.imageUrl}
+                          alt={unit.name}
+                          fill
+                          unoptimized
+                          className="object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-neutral-300">
+                          <Car size={20} />
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-neutral-900 truncate">

@@ -41,6 +41,7 @@ export interface DashboardStats {
     id: string;
     name: string;
     status: string;
+    imageUrl: string | null;
   }[];
 }
 
@@ -82,7 +83,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   // Fetch unit counts
   const allUnits = await prisma.unit.findMany({
-    select: { id: true, name: true, status: true },
+    select: { id: true, name: true, status: true, imageUrl: true },
   });
   const totalUnits = allUnits.length;
   const operationalUnits = allUnits.filter((u) => u.status === "OPERATIONAL").length;
@@ -194,7 +195,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   const availableUnitsToday = allUnits
     .filter((u) => !bookedUnitIds.has(u.id))
-    .map((u) => ({ id: u.id, name: u.name, status: u.status }));
+    .map((u) => ({ id: u.id, name: u.name, status: u.status, imageUrl: u.imageUrl }));
 
   return {
     totalBookings,
