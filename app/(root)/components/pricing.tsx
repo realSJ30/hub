@@ -1,7 +1,10 @@
+"use client"
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const Pricing = () => {
+  const router = useRouter()
   return (
     <section id="pricing" className="w-full py-20 md:py-28 bg-background border-t border-border/50">
       <div className="container mx-auto px-4 md:px-6">
@@ -46,7 +49,7 @@ const Pricing = () => {
               </li>
             </ul>
             
-            <Button variant="outline" className="w-full h-12 text-base font-semibold border-border/60 hover:bg-neutral-50 transition-colors">
+            <Button onClick={() => router.push('/signup')} variant="outline" className="w-full h-12 text-base font-semibold border-border/60 hover:bg-neutral-50 transition-colors">
               Get Started
             </Button>
           </div>

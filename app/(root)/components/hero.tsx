@@ -31,7 +31,7 @@ const Hero = () => {
             
             <div className='flex flex-col gap-3 min-[400px]:flex-row pt-4'>
               <Button onClick={() => router.push('/signup')} size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/20 transition-transform hover:scale-105">
-                Get Started
+                Get Started Free
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
