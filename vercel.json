@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/bookings/daily-checker",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}
