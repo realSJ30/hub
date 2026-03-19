@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/utils/supabase/server";
+
 
 export interface MonthlyDataPoint {
   month: string;
@@ -79,10 +81,15 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export async function getDashboardStats(): Promise<DashboardStats> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
   const now = new Date();
 
   // Fetch all bookings with relations in a single query
   const bookings = await prisma.booking.findMany({
+    where: { createdById: user.id },
     include: {
       customer: true,
       unit: true,
@@ -93,6 +100,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   // Fetch unit counts
   const allUnits = await prisma.unit.findMany({
+    where: { createdById: user.id },
     select: { id: true, name: true, status: true, imageUrl: true },
   });
   const totalUnits = allUnits.length;

@@ -32,6 +32,7 @@ export async function createBooking(data: CreateBookingInput) {
     const conflictingBooking = await prisma.booking.findFirst({
       where: {
         unitId: validationResult.data.unitId,
+        createdById: user.id,
         status: {
           in: ["PENDING", "CONFIRMED", "IN_PROGRESS"],
         },
@@ -108,11 +109,20 @@ export async function updateBooking(id: string, data: CreateBookingInput) {
       };
     }
 
+    // Verify ownership
+    const existing = await prisma.booking.findFirst({
+      where: { id, createdById: user.id },
+    });
+    if (!existing) {
+      return { success: false, error: "Booking not found or unauthorized" };
+    }
+
     // Check for overlapping bookings (excluding current booking)
     const conflictingBooking = await prisma.booking.findFirst({
       where: {
         unitId: validationResult.data.unitId,
         id: { not: id },
+        createdById: user.id,
         status: {
           in: ["PENDING", "CONFIRMED", "IN_PROGRESS"],
         },
@@ -169,7 +179,12 @@ export async function updateBooking(id: string, data: CreateBookingInput) {
 
 export async function getBookings() {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
     const bookings = await prisma.booking.findMany({
+      where: { createdById: user.id },
       include: {
         customer: true,
         unit: true,
@@ -202,9 +217,14 @@ export async function getBookings() {
 
 export async function getBookingsByUnit(unitId: string) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
     const bookings = await prisma.booking.findMany({
       where: {
         unitId,
+        createdById: user.id,
       },
       include: {
         customer: true,
@@ -238,6 +258,10 @@ export async function getBookingsByUnit(unitId: string) {
 
 export async function getUnitAvailability(unitId: string) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
     if (!unitId) {
       return { success: false, error: "Unit ID is required" };
     }
@@ -245,6 +269,7 @@ export async function getUnitAvailability(unitId: string) {
     const bookings = await prisma.booking.findMany({
       where: {
         unitId,
+        createdById: user.id,
         status: {
           in: ["PENDING", "CONFIRMED", "IN_PROGRESS"],
         },
@@ -278,8 +303,12 @@ export async function getUnitAvailability(unitId: string) {
 
 export async function getBooking(id: string) {
   try {
-    const booking = await prisma.booking.findUnique({
-      where: { id },
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    const booking = await prisma.booking.findFirst({
+      where: { id, createdById: user.id },
       include: {
         customer: true,
         unit: true,
@@ -314,6 +343,17 @@ export async function getBooking(id: string) {
 
 export async function deleteBooking(id: string) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    const existing = await prisma.booking.findFirst({
+      where: { id, createdById: user.id },
+    });
+    if (!existing) {
+      return { success: false, error: "Booking not found or unauthorized" };
+    }
+
     const booking = await prisma.booking.delete({
       where: { id },
     });
@@ -337,6 +377,17 @@ export async function deleteBooking(id: string) {
 
 export async function updateBookingStatus(id: string, status: string) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    const existing = await prisma.booking.findFirst({
+      where: { id, createdById: user.id },
+    });
+    if (!existing) {
+      return { success: false, error: "Booking not found or unauthorized" };
+    }
+
     const booking = await prisma.booking.update({
       where: { id },
       data: { status: status as any },

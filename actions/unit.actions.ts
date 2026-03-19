@@ -92,7 +92,11 @@ export async function createUnit(data: CreateUnitInput) {
  */
 export async function getUnits(filters?: UnitFilters) {
   try {
-    const where: Prisma.UnitWhereInput = {};
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    const where: Prisma.UnitWhereInput = { createdById: user.id };
 
     if (filters) {
       if (filters.status && filters.status !== "ALL") {
@@ -184,6 +188,14 @@ export async function updateUnit(id: string, data: CreateUnitInput) {
       };
     }
 
+    // Verify ownership
+    const existing = await prisma.unit.findFirst({
+      where: { id, createdById: user.id },
+    });
+    if (!existing) {
+      return { success: false, error: "Unit not found or unauthorized" };
+    }
+
     // Update unit in database
     const unit = await prisma.unit.update({
       where: { id },
@@ -245,6 +257,14 @@ export async function deleteUnit(id: string) {
       };
     }
 
+    // Verify ownership
+    const existing = await prisma.unit.findFirst({
+      where: { id, createdById: user.id },
+    });
+    if (!existing) {
+      return { success: false, error: "Unit not found or unauthorized" };
+    }
+
     // Delete unit from database
     await prisma.unit.delete({
       where: { id },
@@ -268,8 +288,12 @@ export async function deleteUnit(id: string) {
 
 export async function getUnit(id: string) {
   try {
-    const unit = await prisma.unit.findUnique({
-      where: { id },
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    const unit = await prisma.unit.findFirst({
+      where: { id, createdById: user.id },
     });
 
     if (!unit) {
