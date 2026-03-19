@@ -69,6 +69,10 @@ Uploads happen client-side (via `@supabase/ssr` browser client). After upload, t
 
 Authentication is managed via **Supabase Auth**. Cookies are used for session management, and Server Actions verify user context before performing any restricted operations.
 
+### **Stripe Integration (New)**
+- Every new user signup automatically creates a linked **Stripe Customer**.
+- User UUIDs and Stripe Customer IDs are synced to a local `users` table via Prisma for future billing and subscription features.
+
 ## 🚀 Getting Started
 
 1. **Install**: `npm install`
