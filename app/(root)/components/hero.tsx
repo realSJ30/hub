@@ -1,8 +1,12 @@
+"use client"
 import { Button } from '@/components/ui/button'
 import { ArrowRight, CheckCircle2, Sparkle } from 'lucide-react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 const Hero = () => {
+  const router = useRouter()
+  
   return (
     <section className='relative w-full py-12 md:py-24 lg:py-32 xl:py-48'>      
       
@@ -26,12 +30,9 @@ const Hero = () => {
             </div>
             
             <div className='flex flex-col gap-3 min-[400px]:flex-row pt-4'>
-              <Button size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/20 transition-transform hover:scale-105">
+              <Button onClick={() => router.push('/signup')} size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/20 transition-transform hover:scale-105">
                 Get Started
                 <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button size="lg" variant="ghost" className="h-12 px-8 text-base">
-                View Demo
               </Button>
             </div>
             
