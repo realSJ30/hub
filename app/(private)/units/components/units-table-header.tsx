@@ -3,17 +3,24 @@ import { Download, X } from "lucide-react";
 import { AddUnitSheet } from "./add-unit-sheet";
 import { UnitFiltersDropdown } from "./unit-filters-dropdown";
 import type { UnitFilters } from "@/lib/validations/unit.schema";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 interface UnitsTableHeaderProps {
   filters: UnitFilters;
   onFilterChange: (filters: UnitFilters) => void;
+  isLoading?: boolean;
+  isSubLoading?: boolean;
 }
 
 export const UnitsTableHeader = ({
   filters,
   onFilterChange,
+  isLoading,
+  isSubLoading,
 }: UnitsTableHeaderProps) => {
   const hasFilters = Object.keys(filters).length > 0;
+  const isOverallLoading = isLoading || isSubLoading;
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -36,15 +43,26 @@ export const UnitsTableHeader = ({
             Clear All
           </Button>
         )}
-        <UnitFiltersDropdown
-          filters={filters}
-          onFilterChange={onFilterChange}
-        />
-        <Button variant="outline" size="sm" className="gap-2 h-9 rounded-sm">
-          <Download size={16} />
-          Export CSV
-        </Button>
-        <AddUnitSheet />
+        
+        {isOverallLoading ? (
+          <>
+            <Skeleton className="h-9 w-[100px] bg-neutral-200 rounded-sm" />
+            <Skeleton className="h-9 w-[120px] bg-neutral-200 rounded-sm" />
+            <Skeleton className="h-9 w-[130px] bg-primary/20 rounded-sm" />
+          </>
+        ) : (
+          <>
+            <UnitFiltersDropdown
+              filters={filters}
+              onFilterChange={onFilterChange}
+            />
+            <Button variant="outline" size="sm" className="gap-2 h-9 rounded-sm">
+              <Download size={16} />
+              Export CSV
+            </Button>
+            <AddUnitSheet />
+          </>
+        )}
       </div>
     </div>
   );

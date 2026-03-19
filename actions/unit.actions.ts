@@ -40,6 +40,22 @@ export async function createUnit(data: CreateUnitInput) {
       };
     }
 
+    // Check subscription status
+    const { getUserSubscriptionStatus } = await import("@/actions/stripe.actions");
+    const { isPro } = await getUserSubscriptionStatus();
+
+    if (!isPro) {
+      const existingUnitsCount = await prisma.unit.count({
+        where: { createdById: user.id },
+      });
+      if (existingUnitsCount >= 1) {
+        return {
+          success: false,
+          error: "Free users can only manage 1 unit. Please upgrade to Pro to add more units.",
+        };
+      }
+    }
+
     // Insert unit into database using Prisma
     const unit = await prisma.unit.create({
       data: {
@@ -137,11 +153,16 @@ export async function getUnits(filters?: UnitFilters) {
       }
     }
 
+    // Check subscription status to enforce limit on list
+    const { getUserSubscriptionStatus } = await import("@/actions/stripe.actions");
+    const { isPro } = await getUserSubscriptionStatus();
+
     const units = await prisma.unit.findMany({
       where,
       orderBy: {
         createdAt: "desc",
       },
+      take: isPro ? undefined : 1, // Enforce 1 unit access for Free users
     });
 
     return {

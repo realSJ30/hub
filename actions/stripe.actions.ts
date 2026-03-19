@@ -33,3 +33,40 @@ export async function createStripeCustomer(email: string, fullName?: string) {
     return null;
   }
 }
+
+/**
+ * Checks if the currently authenticated user has an active Stripe subscription.
+ * Returns { isPro: boolean }
+ */
+export async function getUserSubscriptionStatus() {
+  try {
+    const { createClient } = await import('@/utils/supabase/server');
+    const { prisma } = await import('@/lib/prisma');
+    
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return { isPro: false };
+    }
+
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id }
+    });
+
+    if (!dbUser || !dbUser.stripeCustomerId) {
+      return { isPro: false };
+    }
+
+    const subscriptions = await stripe.subscriptions.list({
+      customer: dbUser.stripeCustomerId,
+      status: 'active',
+    });
+
+    return { isPro: subscriptions.data.length > 0 };
+  } catch (error) {
+    console.error("Error checking subscription status:", error);
+    return { isPro: false };
+  }
+}
+

@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { getDashboardStats } from "@/actions/dashboard.actions";
+import { getUserSubscriptionStatus } from "@/actions/stripe.actions";
 import {
   BookOpen,
   Car,
@@ -70,7 +71,10 @@ const DashboardPage = async () => {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const stats = await getDashboardStats();
+  const [stats, { isPro }] = await Promise.all([
+    getDashboardStats(),
+    getUserSubscriptionStatus(),
+  ]);
 
   return (
     <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">
@@ -164,7 +168,22 @@ const DashboardPage = async () => {
           {/* Revenue bar chart — 1/2 width */}
           <div className="lg:col-span-1 h-full min-h-[360px] flex">
             <div className="w-full h-full flex flex-col">
-              <RevenueChart data={stats.monthlyData} />
+              {isPro ? (
+                <RevenueChart data={stats.monthlyData} />
+              ) : (
+                <div className="flex-1 bg-white border border-neutral-200 rounded-lg flex flex-col items-center justify-center p-6 text-center space-y-3">
+                  <div className="bg-primary/10 p-4 rounded-full">
+                    <BarChart3 className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-lg text-neutral-900">Revenue Overview Locked</h3>
+                  <p className="text-sm text-neutral-500 max-w-sm">
+                    Upgrade to a Pro subscription to access detailed revenue analytics and trends.
+                  </p>
+                  <Link href="/pricing" className="mt-2 text-sm font-medium text-white bg-primary px-5 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                    Upgrade to Pro
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
           {/* Mini Calendar Overivew — 1/2 width */}

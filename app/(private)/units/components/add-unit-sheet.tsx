@@ -30,7 +30,14 @@ import { Plus, Loader2, Upload, X, ImageIcon } from "lucide-react";
 import {
   createUnitSchema,
 } from "@/lib/validations/unit.schema";
-import { useCreateUnit, useUploadUnitImage } from "@/hooks";
+import { useCreateUnit, useUploadUnitImage, useUnits, useSubscription } from "@/hooks";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 import Image from "next/image";
 
 export const AddUnitSheet = () => {
@@ -42,6 +49,10 @@ export const AddUnitSheet = () => {
 
   const { mutate: createUnit, isPending } = useCreateUnit();
   const { mutateAsync: uploadImage, isPending: uploadingImage } = useUploadUnitImage();
+  const { data: unitsData } = useUnits();
+  const { data: subData } = useSubscription();
+
+  const isFreeLimitReached = !subData?.isPro && (unitsData?.data?.length || 0) >= 1;
 
   const form = useForm({
     defaultValues: {
@@ -108,15 +119,29 @@ export const AddUnitSheet = () => {
   return (
     <>
       <Sheet open={open} onOpenChange={handleSheetOpenChange}>
-        <SheetTrigger asChild>
-          <Button
-            size="sm"
-            className="gap-2 h-9 rounded-sm bg-primary hover:bg-primary/90"
-          >
-            <Plus size={16} />
-            Add New Unit
-          </Button>
-        </SheetTrigger>
+        <TooltipProvider>
+          <Tooltip delayDuration={50}>
+            <TooltipTrigger asChild>
+              <span tabIndex={0} className="inline-block">
+                <SheetTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="gap-2 h-9 rounded-sm bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isFreeLimitReached}
+                  >
+                    <Plus size={16} />
+                    Add New Unit
+                  </Button>
+                </SheetTrigger>
+              </span>
+            </TooltipTrigger>
+            {isFreeLimitReached && (
+              <TooltipContent className="bg-neutral-900 border-neutral-800 text-white z-50 px-3 py-1.5 rounded-md text-sm shadow-md" sideOffset={6}>
+                <p>Upgrade to Pro to add more units.</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
         <SheetContent className="sm:max-w-[540px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Add New Unit</SheetTitle>
