@@ -11,6 +11,20 @@ datasource db {
   schemas  = ["public"]
 }
 
+model User {
+  id               String   @id @db.Uuid
+  fullName         String?  @map("full_name")
+  email            String   @unique
+  stripeCustomerId String?  @map("stripe_customer_id")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+  @@schema("public")
+}
+
 // Unit model for rental vehicles
 model Unit {
   id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -28,7 +42,7 @@ model Unit {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  // Foreign key to Supabase auth.users
+  // Foreign key to Supabase auth.users through our User model
   createdById String @map("created_by_id") @db.Uuid
 
   // Relationships

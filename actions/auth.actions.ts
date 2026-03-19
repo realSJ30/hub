@@ -4,6 +4,9 @@ import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { signupSchema, loginSchema, type SignupValues, type LoginValues } from "@/lib/schemas/auth.schema";
+import { prisma } from "@/lib/prisma";
+import { createStripeCustomer } from "@/actions/stripe.actions";
+
 
 export async function login(formData: LoginValues) {
   const supabase = await createClient();
@@ -55,9 +58,39 @@ export async function signup(formData: SignupValues) {
     return { error: "A user with this email already exists." };
   }
 
+  // ----- STRIPE INTEGRATION -----
+  if (data?.user) {
+    const { id: userId, email } = data.user;
+    
+    // 1. Create Stripe customer (non-blocking)
+    // Wrap in try-catch/graceful handling internally via createStripeCustomer
+    const stripeCustomerId = await createStripeCustomer(
+      email as string, 
+      formData.name
+    );
+
+    // 2. Create User record in local Database (Prisma)
+    try {
+      await prisma.user.create({
+        data: {
+          id: userId,
+          email: email as string,
+          fullName: formData.name,
+          stripeCustomerId: stripeCustomerId,
+        },
+      });
+      console.log(`Prisma user created for ${email}`);
+    } catch (dbError) {
+      // Requirements: do not block signup if non-auth parts fail
+      console.error("Error linking user to database/stripe record:", dbError);
+    }
+  }
+  // ------------------------------
+
   revalidatePath("/", "layout");
   redirect("/login?message=Check your email to confirm your account");
 }
+
 
 export async function signOut() {
   const supabase = await createClient();

@@ -67,14 +67,6 @@ const LoginForm = () => {
               <GoogleIcon size={18} />
               Login with Google
             </Button>
-            <Button
-              variant="outline"
-              className="w-full sm:flex-1 gap-2 h-10 rounded-md"
-              type="button"
-            >
-              <GithubIcon size={18} />
-              Login with GitHub
-            </Button>
           </div>
           <div className="flex items-center gap-4 my-2">
             <hr className="w-full" />
