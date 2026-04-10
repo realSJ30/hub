@@ -36,7 +36,7 @@ export async function upsertCustomer(data: CreateCustomerInput) {
     }
 
     if (customer) {
-      // Update existing customer if needed (or just return existing)
+      // Update existing customer
       customer = await prisma.customer.update({
         where: { id: customer.id },
         data: {
@@ -71,7 +71,18 @@ export async function upsertCustomer(data: CreateCustomerInput) {
 
 export async function getCustomers() {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    // Customer has no direct createdById. Scope the list to customers who
+    // have at least one booking belonging to the current authenticated user.
     const customers = await prisma.customer.findMany({
+      where: {
+        bookings: {
+          some: { createdById: user.id },
+        },
+      },
       orderBy: {
         fullName: "asc",
       },

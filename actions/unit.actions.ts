@@ -157,13 +157,21 @@ export async function getUnits(filters?: UnitFilters) {
     const { getUserSubscriptionStatus } = await import("@/actions/stripe.actions");
     const { isPro } = await getUserSubscriptionStatus();
 
+    console.log(`[getUnits] User ID: ${user.id}`);
+    console.log(`[getUnits] Filters: ${JSON.stringify(filters)}`);
+    console.log(`[getUnits] Final where: ${JSON.stringify(where)}`);
+
     const units = await prisma.unit.findMany({
       where,
       orderBy: {
         createdAt: "desc",
       },
-      take: isPro ? undefined : 1, // Enforce 1 unit access for Free users
     });
+
+    console.log(`[getUnits] Found ${units.length} units.`);
+    if (units.length > 0) {
+      console.log(`[getUnits] First unit createdById: ${units[0].createdById}`);
+    }
 
     return {
       success: true,
